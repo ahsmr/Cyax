@@ -79,23 +79,20 @@ body, html, #root {
 .dot-yellow { background-color: #ffbd2e; }
 .dot-green { background-color: #27c93f; }
 
+/* 1. Ensure the parent container doesn't grow too large */
 .app-branding {
   display: flex;
   align-items: center;
-  gap: 8px;
+  height: 50px;         /* Match this to your header's height */
+  overflow: hidden;     /* Prevents any accidental spillover */
 }
 
-.app-logo {
-  width: 22px;
-  height: 22px;
-  background: linear-gradient(135deg, var(--kul-blue), var(--sky-blue));
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 900;
-  font-size: 11px;
-  color: white;
+/* 2. Constrain the logo image */
+.app-logo-img {
+  height: 32px;         /* Adjust this height until it looks perfect in your header */
+  width: auto;          /* Maintains the aspect ratio so it doesn't look squished */
+  object-fit: contain;  /* Ensures the entire image is visible inside its box */
+  display: block;
 }
 
 .app-name {

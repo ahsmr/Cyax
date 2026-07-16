@@ -28,9 +28,12 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
         
         <div className="app-branding">
-          <div className="app-logo">C</div>
-          <span className="app-name">CYAX</span>
-        </div>
+          <img 
+            src="/logo_transparent.png" 
+            alt="CYAX Logo" 
+            className="app-logo-img" 
+          />
+</div>
       </div>
 
       {/* Chrome Tab Center Workspace */}
