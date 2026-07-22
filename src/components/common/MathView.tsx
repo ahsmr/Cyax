@@ -1,3 +1,4 @@
+// HELPER FUNCTION DON'T MODIFY
 import React, { useMemo } from 'react';
 import katex from 'katex';
 
