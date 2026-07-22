@@ -4,6 +4,7 @@ import { Sidebar } from './components/Sidebar';
 import { HomeContent } from './components/HomeContent';
 import type { Tab } from './types';
 
+
 export default function App() {
   const [tabs, setTabs] = useState<Tab[]>([
     { id: 'tab-1', title: 'Home Dashboard', createdAt: Date.now() },

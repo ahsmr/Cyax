@@ -1,10 +1,15 @@
 import React from 'react';
 import { Activity, Compass, Sliders, Settings2, Zap } from 'lucide-react';
 
+import { ModellingSection } from './systems/ModellingSection';
+import { SystemAnalysisSection } from './systems/SystemAnalysisSection';
+import { ControlDesignSection } from './systems/ControlDesignSection';
+import { SamplingInterpolationSection } from './systems/SamplingInterpolationSection';
+
 export const HomeContent: React.FC = () => {
   return (
     <div className="home-container">
-      {/* Banner */}
+      {/* Hero Banner */}
       <div className="hero-banner">
         <div className="hero-badge">
           <Zap size={10} style={{ color: 'var(--sky-blue)' }} />
@@ -22,7 +27,7 @@ export const HomeContent: React.FC = () => {
         </div>
       </div>
 
-      {/* Grid Block */}
+      {/* Quick Analytics Engines */}
       <h2 className="section-label">Quick Analytics Engines</h2>
       <div className="card-grid">
         <div className="card">
@@ -59,8 +64,19 @@ export const HomeContent: React.FC = () => {
         </div>
       </div>
 
-      {/* Diagnostics panel */}
-      <div className="status-panel">
+      {/* Interactive Systems Theory Collapsible Sections */}
+      <h2 className="section-label" style={{ marginTop: '28px' }}>
+        Core Systems Theory Modules
+      </h2>
+      <div className="systems-interactive-container">
+        <ModellingSection />
+        <SystemAnalysisSection />
+        <ControlDesignSection />
+        <SamplingInterpolationSection />
+      </div>
+
+      {/* Status Panel */}
+      <div className="status-panel" style={{ marginTop: '24px' }}>
         <div className="status-header">
           <div className="status-header-title">
             <Settings2 size={14} style={{ color: 'var(--sky-blue)' }} />
@@ -79,7 +95,7 @@ export const HomeContent: React.FC = () => {
           </div>
           <div className="metric-box">
             <span className="metric-label">Active Modules</span>
-            <span className="metric-value purple">0 Active</span>
+            <span className="metric-value purple">4 Active</span>
           </div>
           <div className="metric-box">
             <span className="metric-label">Workspace Synced</span>

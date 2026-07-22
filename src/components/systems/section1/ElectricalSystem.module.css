@@ -1,0 +1,92 @@
+.container {
+  background: rgba(2, 6, 23, 0.4);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 14px;
+}
+
+.subHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #38bdf8;
+  margin-bottom: 8px;
+}
+
+.icon {
+  color: #38bdf8;
+}
+
+.description {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 14px;
+}
+
+.inputGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inputGroup label {
+  font-size: 0.72rem;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.inputGroup input {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: #38bdf8;
+  font-family: monospace;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.inputGroup input:focus {
+  border-color: #38bdf8;
+}
+
+.calcBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #0284c7;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.calcBtn:hover {
+  background: #0369a1;
+}
+
+.resultBox {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 6px;
+  color: #e0f2fe;
+  font-family: monospace;
+  font-size: 0.82rem;
+}

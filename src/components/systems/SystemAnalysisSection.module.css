@@ -1,0 +1,103 @@
+.sectionCard {
+  background: rgba(13, 27, 42, 0.6);
+  border: 1px solid rgba(168, 85, 247, 0.15);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  cursor: pointer;
+  background: rgba(15, 23, 42, 0.4);
+  color: #e2e8f0;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+.header:hover {
+  background: rgba(168, 85, 247, 0.08);
+}
+
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.iconPurple {
+  color: #c084fc;
+}
+
+.body {
+  padding: 16px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.description {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 14px;
+}
+
+.inputGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inputGroup label {
+  font-size: 0.75rem;
+  color: #cbd5e1;
+  text-transform: uppercase;
+}
+
+.inputGroup input {
+  background: rgba(2, 6, 23, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: #c084fc;
+  font-family: monospace;
+  outline: none;
+}
+
+.calcBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #9333ea;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.calcBtn:hover {
+  background: #7e22ce;
+}
+
+.resultBox {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: rgba(168, 85, 247, 0.08);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 6px;
+  color: #f3e8ff;
+  font-family: monospace;
+  font-size: 0.82rem;
+}
