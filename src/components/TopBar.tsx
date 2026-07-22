@@ -79,7 +79,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         <button className="util-btn">
           <Settings size={14} />
         </button>
-        <span className="version-badge">v0.0.0.1</span>
+        <span className="version-badge">v0.0.0.2</span>
       </div>
     </header>
   );
