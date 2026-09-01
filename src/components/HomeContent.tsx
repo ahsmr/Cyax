@@ -6,7 +6,11 @@ import { SystemAnalysisSection } from './systems/SystemAnalysisSection';
 import { ControlDesignSection } from './systems/ControlDesignSection';
 import { SamplingInterpolationSection } from './systems/SamplingInterpolationSection';
 
-export const HomeContent: React.FC = () => {
+interface HomeContentProps {
+  onInitialize: () => void;
+}
+
+export const HomeContent: React.FC<HomeContentProps> = ({ onInitialize }) => {
   return (
     <div className="home-container">
       {/* Hero Banner */}
@@ -22,7 +26,7 @@ export const HomeContent: React.FC = () => {
           An interactive, high-performance toolkit designed to trace frequencies, design compensators, and map transfer functions. Perfect for analyzing transient and frequency responses.
         </p>
         <div className="hero-actions">
-          <button className="primary-btn">Initialize New System</button>
+          <button className="primary-btn" onClick={onInitialize}> Initialize New System</button>
           <button className="secondary-btn">Load Template</button>
         </div>
       </div>

@@ -3,7 +3,9 @@ import { TopBar } from './components/TopBar';
 import { Sidebar } from './components/Sidebar';
 import { HomeContent } from './components/HomeContent';
 import type { Tab } from './types';
+import SystemAnalysis from './components/SystemAnalysis';
 
+type ViewType = 'home' | 'analysis';
 
 export default function App() {
   // State for managing tabs and the active tab
@@ -11,19 +13,23 @@ export default function App() {
     { id: 'tab-1', title: 'Home Dashboard', createdAt: Date.now() },
   ]);
   const [activeTabId, setActiveTabId] = useState<string>('tab-1');
+  const [tabViews, setTabViews] = useState<Record<string, ViewType>>({
+    'tab-1': 'home',
+  });
 
   // Triggers cloning of active workspace homepage
-  const addTab = () => {
+  const addTab = (viewType: ViewType = 'home', customTitle?: string) => {
     const newId = `tab-${Math.random().toString(36).substr(2, 9)}`;
     const count = tabs.filter((t) => t.title.startsWith('Home Dashboard')).length + 1;
     
     const newTab: Tab = {
       id: newId,
-      title: `Home Dashboard (${count})`,
+      title: customTitle || `Home Dashboard (${count})`,
       createdAt: Date.now(),
     };
     
-    setTabs([...tabs, newTab]);
+    setTabs((prev) => [...prev, newTab]);
+    setTabViews((prev) => ({ ...prev, [newId]: viewType }));
     setActiveTabId(newId);
   };
 
@@ -35,6 +41,12 @@ export default function App() {
     const currentIdx = tabs.findIndex((t) => t.id === id);
     const updatedTabs = tabs.filter((tab) => tab.id !== id);
     setTabs(updatedTabs);
+
+    setTabViews((prev) => {
+      const copy = { ...prev };
+      delete copy[id];
+      return copy;
+    });
 
     if (activeTabId === id) {
       const fallbackTab = updatedTabs[currentIdx - 1] || updatedTabs[0];
@@ -49,7 +61,7 @@ export default function App() {
         tabs={tabs}
         activeTabId={activeTabId}
         setActiveTabId={setActiveTabId}
-        addTab={addTab}
+        addTab={() => addTab('home')}
         closeTab={closeTab}
       />
 
@@ -72,7 +84,13 @@ export default function App() {
                 transition: 'opacity 0.15s ease',
               }}
             >
-              <HomeContent />
+              {tabViews[tab.id] === 'analysis' ? (
+                <SystemAnalysis />
+              ) : (
+                <HomeContent
+                  onInitialize={() => addTab('analysis', 'System Analysis')}
+                />
+              )}
             </div>
           ))}
         </div>
