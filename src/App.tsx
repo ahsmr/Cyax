@@ -6,6 +6,7 @@ import type { Tab } from './types';
 
 
 export default function App() {
+  // State for managing tabs and the active tab
   const [tabs, setTabs] = useState<Tab[]>([
     { id: 'tab-1', title: 'Home Dashboard', createdAt: Date.now() },
   ]);

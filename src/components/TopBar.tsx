@@ -9,7 +9,7 @@ interface TopBarProps {
   addTab: () => void;
   closeTab: (id: string, e: React.MouseEvent) => void;
 }
-
+// Expor this since the top bar is a core component of the app and will be used in multiple places, including the main App component.
 export const TopBar: React.FC<TopBarProps> = ({
   tabs,
   activeTabId,

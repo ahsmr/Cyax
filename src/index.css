@@ -1,4 +1,4 @@
-/*DON'T EDIT THIS FILE DIRECTLY */
+/*DON'T EDIT THIS FILE DIRECTLY, This is the base css file for the application */
 
 :root {
   --bg-deep: #070b15;
@@ -102,6 +102,7 @@ body, html, #root {
   font-size: 14px;
   letter-spacing: 1px;
   background: linear-gradient(to right, #fff, var(--text-secondary));
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

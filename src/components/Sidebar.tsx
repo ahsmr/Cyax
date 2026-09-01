@@ -3,7 +3,7 @@ import { ChevronRight, LayoutDashboard, Database, Activity, Code, Layers } from 
 import type { SidebarSection } from '../types';
 
 const COMPONENT_SECTIONS: SidebarSection[] = [
-  {
+  { 
     id: 'core-systems',
     title: 'Core Systems',
     items: [
@@ -36,7 +36,7 @@ const COMPONENT_SECTIONS: SidebarSection[] = [
     ],
   },
 ];
-
+// Sidebar component for the application
 export const Sidebar: React.FC = () => {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     'core-systems': true,
