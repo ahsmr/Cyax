@@ -1,7 +1,7 @@
 import React from 'react';
 import { Plus, X, Settings, Bell } from 'lucide-react';
 import type { Tab } from '../types';
-
+import packageJson from '../../package.json';
 interface TopBarProps {
   tabs: Tab[];
   activeTabId: string;
@@ -9,7 +9,7 @@ interface TopBarProps {
   addTab: () => void;
   closeTab: (id: string, e: React.MouseEvent) => void;
 }
-// Expor this since the top bar is a core component of the app and will be used in multiple places, including the main App component.
+// Export this since the top bar is a core component of the app and will be used in multiple places, including the main App component.
 export const TopBar: React.FC<TopBarProps> = ({
   tabs,
   activeTabId,
@@ -79,7 +79,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         <button className="util-btn">
           <Settings size={14} />
         </button>
-        <span className="version-badge">v0.0.0.2</span>
+        <span className="version-badge">v{packageJson.version}</span>
       </div>
     </header>
   );
