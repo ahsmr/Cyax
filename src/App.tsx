@@ -27,9 +27,9 @@ export default function App() {
   // ==========================================
 
   // * Master array of open tabs (maintains tab order & metadata)
-  const [tabs, setTabs] = useState<Tab[]>([
-    { id: 'tab-1', title: 'Home Dashboard', createdAt: Date.now() },
-  ]);
+  const [tabs, setTabs] = useState<Tab[]>(() => [
+  { id: 'tab-1', title: 'Home Dashboard', createdAt: Date.now() },
+]);
 
   // * Pointer ID to the currently visible/focused tab
   const [activeTabId, setActiveTabId] = useState<string>('tab-1');
