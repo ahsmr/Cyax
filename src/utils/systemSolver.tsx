@@ -1,19 +1,41 @@
 import type { Node, Edge } from '@xyflow/react';
 
+// ==========================================
+// 1. TYPE DEFINITIONS & INTERFACES
+// ==========================================
+
+/**
+ * Output data structure returned by the system transfer function solver engine.
+ */
 export interface SolverResult {
-  latexEquation: string;
-  stepByStep: string[];
-  error?: string;
+  latexEquation: string; // The formatted final LaTeX equation H(s)
+  stepByStep: string[];   // Array of LaTeX or textual derivation steps
+  error?: string;        // Optional error details on calculation failure
 }
 
-// Polynomial in s: index i represents coefficient of s^i
+/**
+ * * Polynomial representation in Laplace variable 's':
+ * An array of coefficients where index `i` corresponds to the coefficient of `s^i`.
+ * Example: [2, 3, 1] represents 1*s^2 + 3*s + 2
+ */
 type Poly = number[];
 
+/**
+ * * Rational Transfer Function in Laplace Domain:
+ * Represents a fraction with polynomial numerator and denominator: N(s) / D(s)
+ */
 interface Rational {
   num: Poly;
   den: Poly;
 }
 
+// ==========================================
+// 2. POLYNOMIAL ARITHMETIC HELPER FUNCTIONS
+// ==========================================
+
+/**
+ * Performs polynomial addition: A(s) + B(s)
+ */
 function polyAdd(a: Poly, b: Poly): Poly {
   const max = Math.max(a.length, b.length);
   const res = new Array(max).fill(0);
@@ -23,6 +45,9 @@ function polyAdd(a: Poly, b: Poly): Poly {
   return res;
 }
 
+/**
+ * Performs polynomial subtraction: A(s) - B(s)
+ */
 function polySub(a: Poly, b: Poly): Poly {
   const max = Math.max(a.length, b.length);
   const res = new Array(max).fill(0);
@@ -32,6 +57,9 @@ function polySub(a: Poly, b: Poly): Poly {
   return res;
 }
 
+/**
+ * Performs polynomial multiplication: A(s) * B(s)
+ */
 function polyMul(a: Poly, b: Poly): Poly {
   const res = new Array(a.length + b.length - 1).fill(0);
   for (let i = 0; i < a.length; i++) {
@@ -42,6 +70,13 @@ function polyMul(a: Poly, b: Poly): Poly {
   return res;
 }
 
+// ==========================================
+// 3. RATIONAL EXPRESSION ARITHMETIC
+// ==========================================
+
+/**
+ * Adds two rational expressions: (N1/D1) + (N2/D2) = (N1*D2 + N2*D1) / (D1*D2)
+ */
 function addRat(a: Rational, b: Rational): Rational {
   return {
     num: polyAdd(polyMul(a.num, b.den), polyMul(b.num, a.den)),
@@ -49,6 +84,9 @@ function addRat(a: Rational, b: Rational): Rational {
   };
 }
 
+/**
+ * Subtracts two rational expressions: (N1/D1) - (N2/D2) = (N1*D2 - N2*D1) / (D1*D2)
+ */
 function subRat(a: Rational, b: Rational): Rational {
   return {
     num: polySub(polyMul(a.num, b.den), polyMul(b.num, a.den)),
@@ -56,6 +94,9 @@ function subRat(a: Rational, b: Rational): Rational {
   };
 }
 
+/**
+ * Multiplies two rational expressions: (N1/D1) * (N2/D2) = (N1*N2) / (D1*D2)
+ */
 function mulRat(a: Rational, b: Rational): Rational {
   return {
     num: polyMul(a.num, b.num),
@@ -63,6 +104,9 @@ function mulRat(a: Rational, b: Rational): Rational {
   };
 }
 
+/**
+ * Divides two rational expressions: (N1/D1) / (N2/D2) = (N1*D2) / (D1*N2)
+ */
 function divRat(a: Rational, b: Rational): Rational {
   return {
     num: polyMul(a.num, b.den),
@@ -70,11 +114,17 @@ function divRat(a: Rational, b: Rational): Rational {
   };
 }
 
+// ==========================================
+// 4. SIMPLIFICATION & LATEX FORMATTING
+// ==========================================
+
 /**
- * Simplifies a rational expression by cleaning near-zero coefficients,
- * factoring out common powers of s, and normalizing leading coefficients.
+ * * Rational Simplification Engine:
+ * Cleans near-zero floating point noise, factors out common powers of 's',
+ * and normalizes leading coefficients of denominator polynomials.
  */
 function simplifyRational(num: Poly, den: Poly): Rational {
+  // Strips trailing near-zero floating point artifacts
   const cleanPoly = (p: Poly): Poly => {
     const cleaned = p.map((c) => (Math.abs(c) < 1e-9 ? 0 : c));
     let len = cleaned.length;
@@ -85,24 +135,26 @@ function simplifyRational(num: Poly, den: Poly): Rational {
   let n = cleanPoly(num);
   let d = cleanPoly(den);
 
+  // Return 0 if numerator is zero
   if (n.length === 0 || n.every((c) => c === 0)) {
     return { num: [0], den: [1] };
   }
 
-  // Find lowest non-zero index (common power of s)
+  // Find lowest non-zero index (common factor of s^k)
   let minN = 0;
   while (minN < n.length && Math.abs(n[minN]) < 1e-9) minN++;
 
   let minD = 0;
   while (minD < d.length && Math.abs(d[minD]) < 1e-9) minD++;
 
+  // Cancel out common powers of s across numerator and denominator
   const kCommon = Math.min(minN, minD);
   if (kCommon > 0) {
     n = n.slice(kCommon);
     d = d.slice(kCommon);
   }
 
-  // Normalize denominator leading coefficient to 1
+  // Normalize denominator's leading coefficient to 1
   if (d.length > 0) {
     const leadD = d[d.length - 1];
     if (Math.abs(leadD) > 1e-9 && Math.abs(leadD - 1) > 1e-9) {
@@ -117,6 +169,11 @@ function simplifyRational(num: Poly, den: Poly): Rational {
   };
 }
 
+/**
+ * * LaTeX Converter:
+ * Converts a polynomial coefficient array into a clean formatted LaTeX string.
+ * Example: [3, 0, 1] -> "s^{2} + 3"
+ */
 function polyToLaTeX(p: Poly): string {
   let len = p.length;
   while (len > 1 && Math.abs(p[len - 1]) < 1e-9) len--;
@@ -143,10 +200,24 @@ function polyToLaTeX(p: Poly): string {
   return terms.length > 0 ? terms.join(' ') : '0';
 }
 
+// ==========================================
+// 5. MAIN TRANSFER FUNCTION SOLVER
+// ==========================================
+
+/**
+ * * Derive Transfer Function Engine:
+ * Analyzes graph nodes and edges to build a symbolic block diagram matrix equation
+ * and solves for the transfer function H(s) = Y(s) / U(s) via rational Gaussian elimination.
+ * 
+ * @param nodes Array of React Flow canvas nodes
+ * @param edges Array of React Flow canvas edges
+ * @returns LaTeX equation string and step-by-step derivation details
+ */
 export function deriveTransferFunction(nodes: Node[], edges: Edge[]): SolverResult {
   try {
     const stepByStep: string[] = [];
 
+    // Identify boundary input and output signal nodes
     const inputNode = nodes.find((n) => n.type === 'input' || n.id === 'u_in');
     const outputNode = nodes.find((n) => n.type === 'output' || n.id === 'y_out');
 
@@ -159,12 +230,14 @@ export function deriveTransferFunction(nodes: Node[], edges: Edge[]): SolverResu
 
     stepByStep.push("Step 1: Construct system matrix for block diagram variables.");
 
+    // Map internal system blocks to index positions for system matrix construction
     const internalNodes = nodes.filter((n) => n.id !== inputNode.id);
     const N = internalNodes.length;
 
     const nodeIndex = new Map<string, number>();
     internalNodes.forEach((n, idx) => nodeIndex.set(n.id, idx));
 
+    // Initialize System Matrix A (N x N identity) and Input Vector B (N x 1 zeros)
     const A: Rational[][] = Array.from({ length: N }, (_, r) =>
       Array.from({ length: N }, (_, c) => ({
         num: r === c ? [1] : [0],
@@ -177,10 +250,12 @@ export function deriveTransferFunction(nodes: Node[], edges: Edge[]): SolverResu
       den: [1],
     }));
 
+    // Populate matrix A and vector B by evaluating block transfer characteristics
     internalNodes.forEach((node) => {
       const row = nodeIndex.get(node.id)!;
       const incoming = edges.filter((e) => e.target === node.id);
 
+      // Determine internal transfer ratio of block node
       let nodeTransfer: Rational = { num: [1], den: [1] };
       if (node.type === 'gain') {
         const K = Number(node.data?.gain ?? 1);
@@ -189,6 +264,7 @@ export function deriveTransferFunction(nodes: Node[], edges: Edge[]): SolverResu
         nodeTransfer = { num: [1], den: [0, 1] }; // 1 / s
       }
 
+      // Process incoming connections and negative feedback flags
       incoming.forEach((edge) => {
         let signGain: Rational = { num: [1], den: [1] };
         if (node.type === 'summing' && edge.targetHandle === 'in-minus') {
@@ -208,6 +284,7 @@ export function deriveTransferFunction(nodes: Node[], edges: Edge[]): SolverResu
 
     stepByStep.push("Step 2: Solve linear system via rational Gaussian elimination.");
 
+    // Perform Symbolic Rational Gaussian Elimination
     for (let i = 0; i < N; i++) {
       let pivotRow = i;
       while (pivotRow < N && A[pivotRow][i].num.every((c) => c === 0)) {
@@ -241,6 +318,7 @@ export function deriveTransferFunction(nodes: Node[], edges: Edge[]): SolverResu
       }
     }
 
+    // Retrieve target output node index
     const outputIdx = nodeIndex.get(outputNode.id);
     if (outputIdx === undefined) {
       return {
@@ -255,6 +333,7 @@ export function deriveTransferFunction(nodes: Node[], edges: Edge[]): SolverResu
     let finalNum = simplified.num;
     let finalDen = simplified.den;
 
+    // Ensure leading coefficient of denominator is positive
     let denLen = finalDen.length;
     while (denLen > 1 && Math.abs(finalDen[denLen - 1]) < 1e-9) denLen--;
     if (denLen > 0 && finalDen[denLen - 1] < 0) {
@@ -262,6 +341,7 @@ export function deriveTransferFunction(nodes: Node[], edges: Edge[]): SolverResu
       finalDen = finalDen.map((c) => -c);
     }
 
+    // Convert polynomials to LaTeX strings
     const numStr = polyToLaTeX(finalNum);
     const denStr = polyToLaTeX(finalDen);
 

@@ -162,7 +162,7 @@ const SystemAnalysis: React.FC = () => {
           <Activity size={20} style={{ color: 'var(--sky-blue)' }} />
           <span>Interactive System Canvas & Transfer Function Analysis</span>
         </div>
-        <span className="version-badge">LTI Engine v1.0</span>
+        <span className="version-badge">LTI Engine v1.0.2</span>
       </div>
 
       {/* --- MAIN GRID LAYOUT: Canvas + Control Panel --- */}
