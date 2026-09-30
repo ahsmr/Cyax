@@ -184,12 +184,15 @@ function polyToLaTeX(p: Poly): string {
     const coeff = p[i];
     if (Math.abs(coeff) < 1e-9) continue;
 
-    let termStr = '';
     const absCoeff = Math.abs(coeff);
 
-    if (i === 0) termStr = `${absCoeff}`;
-    else if (i === 1) termStr = absCoeff === 1 ? 's' : `${absCoeff}s`;
-    else termStr = absCoeff === 1 ? `s^{${i}}` : `${absCoeff}s^{${i}}`;
+// Determine string representation of term
+    const termStr =
+      i === 0
+        ? `${absCoeff}`
+        : i === 1
+        ? absCoeff === 1 ? 's' : `${absCoeff}s`
+        : absCoeff === 1 ? `s^{${i}}` : `${absCoeff}s^{${i}}`;
 
     if (terms.length === 0) {
       terms.push(coeff < 0 ? `-${termStr}` : termStr);
@@ -353,11 +356,11 @@ export function deriveTransferFunction(nodes: Node[], edges: Edge[]): SolverResu
       latexEquation: `H(s) = ${finalLaTeX}`,
       stepByStep,
     };
-  } catch (err: any) {
+    } catch (err: unknown) {
     return {
       latexEquation: 'H(s) = \\text{Invalid Topology}',
       stepByStep: ['System matrix equation solving failed.'],
-      error: err.message,
+      error: err instanceof Error ? err.message : String(err),
     };
   }
 }
