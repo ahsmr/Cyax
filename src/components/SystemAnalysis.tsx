@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   ReactFlow,
   Background,
@@ -10,7 +10,7 @@ import {
 } from '@xyflow/react';
 import type { Connection, Edge, Node } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Activity, Plus, Trash2 } from 'lucide-react';
+import { Activity, Plus, Trash2, Play } from 'lucide-react';
 
 // Custom Node Components representing control system blocks
 import {
@@ -68,9 +68,9 @@ const initialEdges: Edge[] = [
 /**
  * * SystemAnalysis Component
  * Interactive block diagram canvas for building control systems.
- * Evaluates continuous signal flows in real-time and derives symbolic transfer functions H(s).
+ * Evaluates continuous signal flows and derives symbolic transfer functions H(s).
  * 
- * @returns {JSX.Element} The workspace grid, controls panel, and LaTeX math output.
+ * @returns The workspace grid, controls panel, and LaTeX math output.
  */
 const SystemAnalysis: React.FC = () => {
 
@@ -96,13 +96,12 @@ const SystemAnalysis: React.FC = () => {
   // ==========================================
 
   /**
-   * ? Real-Time Solver Effect:
-   * Triggers symbolic transfer function derivation whenever nodes or edges are moved/rewired.
+   * Runs the calculation on demand when the Play button is clicked.
    */
-  useEffect(() => {
+  const runSolver = () => {
     const res = deriveTransferFunction(nodes, edges);
     setSolverOutput(res);
-  }, [nodes, edges]);
+  };
 
   // ==========================================
   // 3. CANVAS EVENT HANDLERS
@@ -215,7 +214,25 @@ const SystemAnalysis: React.FC = () => {
 
           {/* Card 2: Derived Transfer Function & Math Derivation Steps */}
           <div className="card" style={{ padding: '20px' }}>
-            <span className="section-label">State-Space & Transfer Function Derivation</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span className="section-label" style={{ margin: 0 }}>State-Space & Transfer Function Derivation</span>
+              
+              {/* Play Button for Transfer Function Computation */}
+              <button
+                className="secondary-btn"
+                onClick={runSolver}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  borderColor: 'var(--sky-blue)',
+                  color: 'var(--sky-blue)',
+                }}
+              >
+                <Play size={12} fill="currentColor" /> Play
+              </button>
+            </div>
+
             <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               
               {/* Step-by-Step LaTeX Render List */}
