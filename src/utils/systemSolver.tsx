@@ -216,7 +216,7 @@ function polyToLaTeX(p: Poly): string {
  * @param edges Array of React Flow canvas edges
  * @returns LaTeX equation string and step-by-step derivation details
  */
-export function deriveTransferFunction(nodes: Node[], edges: Edge[]): SolverResult {
+export function deriveTransferFunction(nodes: Node[], edges: Edge[]): SolverResult { // TODO: make sure that this is correct
   try {
     const stepByStep: string[] = [];
 

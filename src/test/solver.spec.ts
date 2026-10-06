@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import type { Node, Edge } from '@xyflow/react';
 import { deriveTransferFunction } from '../utils/systemSolver'; // adjust path as needed
 
-describe('deriveTransferFunction Engine', () => {
+describe('deriveTransferFunction Engine', () => { // Add proper and needed test for the systemsolver
   // Helper to create basic node structures
   const createNode = (id: string, type: string, data = {}): Node => ({
     id,
