@@ -1,7 +1,7 @@
-import React from 'react';
-import { Plus, X, Settings, Bell } from 'lucide-react';
-import type { Tab } from '../types';
-import packageJson from '../../package.json';
+import React from "react";
+import { Plus, X, Settings, Bell } from "lucide-react";
+import type { Tab } from "../types";
+import packageJson from "../../package.json";
 interface TopBarProps {
   tabs: Tab[];
   activeTabId: string;
@@ -26,14 +26,14 @@ export const TopBar: React.FC<TopBarProps> = ({
           <span className="dot dot-yellow" />
           <span className="dot dot-green" />
         </div>
-        
+
         <div className="app-branding">
-          <img 
-            src="/logo_transparent.png" 
-            alt="CYAX Logo" 
-            className="app-logo-img" 
+          <img
+            src="/logo_transparent.png"
+            alt="CYAX Logo"
+            className="app-logo-img"
           />
-</div>
+        </div>
       </div>
 
       {/* Chrome Tab Center Workspace */}
@@ -45,7 +45,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               <div
                 key={tab.id}
                 onClick={() => setActiveTabId(tab.id)}
-                className={`chrome-tab ${isActive ? 'active' : ''}`}
+                className={`chrome-tab ${isActive ? "active" : ""}`}
               >
                 <span className="tab-title">{tab.title}</span>
                 {tabs.length > 1 && (

@@ -1,21 +1,23 @@
-import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Search, Activity } from 'lucide-react';
-import styles from './SystemAnalysisSection.module.css';
+import React, { useState } from "react";
+import { ChevronDown, ChevronUp, Search, Activity } from "lucide-react";
+import styles from "./SystemAnalysisSection.module.css";
 
 export const SystemAnalysisSection: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [damping, setDamping] = useState<string>('0.5');
-  const [natFreq, setNatFreq] = useState<string>('10');
+  const [damping, setDamping] = useState<string>("0.5");
+  const [natFreq, setNatFreq] = useState<string>("10");
   const [analysisResult, setAnalysisResult] = useState<string | null>(null);
 
   const analyzeSystem = () => {
     const zeta = parseFloat(damping);
     const wn = parseFloat(natFreq);
-    const overshoot = (Math.exp((-zeta * Math.PI) / Math.sqrt(1 - zeta * zeta)) * 100).toFixed(2);
+    const overshoot = (
+      Math.exp((-zeta * Math.PI) / Math.sqrt(1 - zeta * zeta)) * 100
+    ).toFixed(2);
     const settlingTime = (4 / (zeta * wn)).toFixed(2);
 
     setAnalysisResult(
-      `Underdamped Response (ζ = ${zeta}) | Peak Overshoot %Mp = ${overshoot}% | Settling Time Ts = ${settlingTime} s`
+      `Underdamped Response (ζ = ${zeta}) | Peak Overshoot %Mp = ${overshoot}% | Settling Time Ts = ${settlingTime} s`,
     );
   };
 
@@ -32,7 +34,8 @@ export const SystemAnalysisSection: React.FC = () => {
       {isOpen && (
         <div className={styles.body}>
           <p className={styles.description}>
-            Evaluate stability (Routh-Hurwitz, Nyquist), transient dynamics (overshoot, settling time), and observability.
+            Evaluate stability (Routh-Hurwitz, Nyquist), transient dynamics
+            (overshoot, settling time), and observability.
           </p>
 
           <div className={styles.inputGrid}>
@@ -59,7 +62,9 @@ export const SystemAnalysisSection: React.FC = () => {
             <Activity size={14} /> Analyze Time/Frequency Dynamics
           </button>
 
-          {analysisResult && <div className={styles.resultBox}>{analysisResult}</div>}
+          {analysisResult && (
+            <div className={styles.resultBox}>{analysisResult}</div>
+          )}
         </div>
       )}
     </div>

@@ -6,14 +6,23 @@
   --bg-card: #0c162b;
   --bg-hover: #152445;
   --border-color: #1e2d4a;
-  --kul-blue: #00407A;
+  --kul-blue: #00407a;
   --kul-blue-hover: #0055a5;
   --sky-blue: #38bdf8;
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-dark: #020617;
-  
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    sans-serif;
   color-scheme: dark;
 }
 
@@ -24,7 +33,9 @@
   padding: 0;
 }
 
-body, html, #root {
+body,
+html,
+#root {
   width: 100%;
   height: 100%;
   background-color: var(--bg-deep);
@@ -77,23 +88,29 @@ body, html, #root {
   opacity: 0.8;
   cursor: pointer;
 }
-.dot-red { background-color: #ff5f56; }
-.dot-yellow { background-color: #ffbd2e; }
-.dot-green { background-color: #27c93f; }
+.dot-red {
+  background-color: #ff5f56;
+}
+.dot-yellow {
+  background-color: #ffbd2e;
+}
+.dot-green {
+  background-color: #27c93f;
+}
 
 /* 1. Ensure the parent container doesn't grow too large */
 .app-branding {
   display: flex;
   align-items: center;
-  height: 50px;         /* Match this to your header's height */
-  overflow: hidden;     /* Prevents any accidental spillover */
+  height: 50px; /* Match this to your header's height */
+  overflow: hidden; /* Prevents any accidental spillover */
 }
 
 /* 2. Constrain the logo image */
 .app-logo-img {
-  height: 32px;         /* Adjust this height until it looks perfect in your header */
-  width: auto;          /* Maintains the aspect ratio so it doesn't look squished */
-  object-fit: contain;  /* Ensures the entire image is visible inside its box */
+  height: 32px; /* Adjust this height until it looks perfect in your header */
+  width: auto; /* Maintains the aspect ratio so it doesn't look squished */
+  object-fit: contain; /* Ensures the entire image is visible inside its box */
   display: block;
 }
 
@@ -321,7 +338,9 @@ body, html, #root {
   color: var(--text-secondary);
   cursor: pointer;
   text-align: left;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 .accordion-trigger:hover {
@@ -478,7 +497,12 @@ body, html, #root {
   position: relative;
   border-radius: 16px;
   padding: 24px;
-  background: linear-gradient(135deg, #002f5c 0%, var(--kul-blue) 50%, #123160 100%);
+  background: linear-gradient(
+    135deg,
+    #002f5c 0%,
+    var(--kul-blue) 50%,
+    #123160 100%
+  );
   border: 1px solid rgba(56, 189, 248, 0.2);
   margin-bottom: 24px;
 }
@@ -597,9 +621,18 @@ body, html, #root {
   margin-bottom: 12px;
 }
 
-.icon-blue { background-color: rgba(56, 189, 248, 0.15); color: var(--sky-blue); }
-.icon-green { background-color: rgba(16, 185, 129, 0.15); color: #10b981; }
-.icon-purple { background-color: rgba(168, 85, 247, 0.15); color: #a855f7; }
+.icon-blue {
+  background-color: rgba(56, 189, 248, 0.15);
+  color: var(--sky-blue);
+}
+.icon-green {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+.icon-purple {
+  background-color: rgba(168, 85, 247, 0.15);
+  color: #a855f7;
+}
 
 .card-title {
   font-size: 14px;
@@ -692,10 +725,18 @@ body, html, #root {
   font-weight: 700;
   font-family: monospace;
 }
-.metric-value.cyan { color: var(--sky-blue); }
-.metric-value.green { color: #10b981; }
-.metric-value.purple { color: #a855f7; }
-.metric-value.amber { color: #f59e0b; }
+.metric-value.cyan {
+  color: var(--sky-blue);
+}
+.metric-value.green {
+  color: #10b981;
+}
+.metric-value.purple {
+  color: #a855f7;
+}
+.metric-value.amber {
+  color: #f59e0b;
+}
 
 /* Custom Scrollbars */
 ::-webkit-scrollbar {

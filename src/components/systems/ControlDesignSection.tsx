@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Sliders, Wrench } from 'lucide-react';
-import styles from './ControlDesignSection.module.css';
+import React, { useState } from "react";
+import { ChevronDown, ChevronUp, Sliders, Wrench } from "lucide-react";
+import styles from "./ControlDesignSection.module.css";
 
 export const ControlDesignSection: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [kp, setKp] = useState<string>('2.5');
-  const [ki, setKi] = useState<string>('1.0');
-  const [kd, setKd] = useState<string>('0.1');
+  const [kp, setKp] = useState<string>("2.5");
+  const [ki, setKi] = useState<string>("1.0");
+  const [kd, setKd] = useState<string>("0.1");
   const [designOutput, setDesignOutput] = useState<string | null>(null);
 
   const synthesizeController = () => {
     setDesignOutput(
-      `PID Controller synthesized: C(s) = ${kp} + (${ki}/s) + ${kd}s | Phase Margin increased by +35°`
+      `PID Controller synthesized: C(s) = ${kp} + (${ki}/s) + ${kd}s | Phase Margin increased by +35°`,
     );
   };
 
@@ -28,7 +28,8 @@ export const ControlDesignSection: React.FC = () => {
       {isOpen && (
         <div className={styles.body}>
           <p className={styles.description}>
-            Synthesize PID controllers, Lead-Lag compensators, and State-Feedback (LQR / Pole Placement).
+            Synthesize PID controllers, Lead-Lag compensators, and
+            State-Feedback (LQR / Pole Placement).
           </p>
 
           <div className={styles.inputGrid}>
@@ -50,7 +51,9 @@ export const ControlDesignSection: React.FC = () => {
             <Wrench size={14} /> Tune & Synthesize Controller
           </button>
 
-          {designOutput && <div className={styles.resultBox}>{designOutput}</div>}
+          {designOutput && (
+            <div className={styles.resultBox}>{designOutput}</div>
+          )}
         </div>
       )}
     </div>

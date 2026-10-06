@@ -1,10 +1,10 @@
-import React from 'react';
-import { Activity, Compass, Sliders, Settings2, Zap } from 'lucide-react';
+import React from "react";
+import { Activity, Compass, Sliders, Settings2, Zap } from "lucide-react";
 
-import { ModellingSection } from './systems/ModellingSection';
-import { SystemAnalysisSection } from './systems/SystemAnalysisSection';
-import { ControlDesignSection } from './systems/ControlDesignSection';
-import { SamplingInterpolationSection } from './systems/SamplingInterpolationSection';
+import { ModellingSection } from "./systems/ModellingSection";
+import { SystemAnalysisSection } from "./systems/SystemAnalysisSection";
+import { ControlDesignSection } from "./systems/ControlDesignSection";
+import { SamplingInterpolationSection } from "./systems/SamplingInterpolationSection";
 
 /**
  * * HomeContentProps
@@ -20,22 +20,20 @@ interface HomeContentProps {
  * The main launchpad / dashboard view for the Cyax application.
  * Serves as the central hub for quick-launching analysis engines (Bode, Root Locus, State-Space),
  * accessing interactive core theory modules, and viewing engine health metrics.
- * 
+ *
  * @param {HomeContentProps} props - Component properties containing execution callbacks.
  * @returns {JSX.Element} The rendered dashboard layout.
  */
 export const HomeContent: React.FC<HomeContentProps> = ({ onInitialize }) => {
   return (
     <div className="home-container">
-
       {/* ==========================================
           1. HERO BANNER (Workspace Launchpad)
           ========================================== */}
       <div className="hero-banner">
-
         {/* Category Badge */}
         <div className="hero-badge">
-          <Zap size={10} style={{ color: 'var(--sky-blue)' }} />
+          <Zap size={10} style={{ color: "var(--sky-blue)" }} />
           <span className="hero-badge-text">
             Systems Theory and Control Engine
           </span>
@@ -44,14 +42,18 @@ export const HomeContent: React.FC<HomeContentProps> = ({ onInitialize }) => {
         {/* Main Title & Description */}
         <h1 className="hero-title">Control Systems Simulator</h1>
         <p className="hero-description">
-          An interactive, high-performance toolkit designed to trace frequencies, design compensators, and map transfer functions. Perfect for analyzing transient and frequency responses.
+          An interactive, high-performance toolkit designed to trace
+          frequencies, design compensators, and map transfer functions. Perfect
+          for analyzing transient and frequency responses.
         </p>
 
         {/* Workspace Action Buttons */}
         <div className="hero-actions">
-
           {/* * Spawns a new System Analysis workspace tab in App.tsx */}
-          <button className="primary-btn" onClick={onInitialize}> Initialize New System</button>
+          <button className="primary-btn" onClick={onInitialize}>
+            {" "}
+            Initialize New System
+          </button>
 
           {/* TODO: Implement pre-configured control system templates picker */}
           <button className="secondary-btn">Load Template</button>
@@ -69,7 +71,9 @@ export const HomeContent: React.FC<HomeContentProps> = ({ onInitialize }) => {
               <Activity size={16} />
             </div>
             <h3 className="card-title">Bode Plotter</h3>
-            <p className="card-body">Calculate gain margins (GM) and phase margins (PM) visually.</p>
+            <p className="card-body">
+              Calculate gain margins (GM) and phase margins (PM) visually.
+            </p>
           </div>
           <span className="card-link">Launch Module →</span>
         </div>
@@ -80,7 +84,9 @@ export const HomeContent: React.FC<HomeContentProps> = ({ onInitialize }) => {
               <Compass size={16} />
             </div>
             <h3 className="card-title">Root Locus Map</h3>
-            <p className="card-body">Determine root trajectory lines dynamically with gain increments.</p>
+            <p className="card-body">
+              Determine root trajectory lines dynamically with gain increments.
+            </p>
           </div>
           <span className="card-link">Launch Module →</span>
         </div>
@@ -91,7 +97,10 @@ export const HomeContent: React.FC<HomeContentProps> = ({ onInitialize }) => {
               <Sliders size={16} />
             </div>
             <h3 className="card-title">State-Space Model</h3>
-            <p className="card-body">Extract transient characteristics and verify complete observability.</p>
+            <p className="card-body">
+              Extract transient characteristics and verify complete
+              observability.
+            </p>
           </div>
           <span className="card-link">Launch Module →</span>
         </div>
@@ -100,7 +109,7 @@ export const HomeContent: React.FC<HomeContentProps> = ({ onInitialize }) => {
       {/* ==========================================
           3. CORE SYSTEMS THEORY MODULES (Interactive Collapsibles)
           ========================================== */}
-      <h2 className="section-label" style={{ marginTop: '28px' }}>
+      <h2 className="section-label" style={{ marginTop: "28px" }}>
         Core Systems Theory Modules
       </h2>
 
@@ -118,10 +127,10 @@ export const HomeContent: React.FC<HomeContentProps> = ({ onInitialize }) => {
       {/* ==========================================
           4. STATUS PANEL (Engine Diagnostics & Health)
           ========================================== */}
-      <div className="status-panel" style={{ marginTop: '24px' }}>
+      <div className="status-panel" style={{ marginTop: "24px" }}>
         <div className="status-header">
           <div className="status-header-title">
-            <Settings2 size={14} style={{ color: 'var(--sky-blue)' }} />
+            <Settings2 size={14} style={{ color: "var(--sky-blue)" }} />
             <span>Core Calculator Engines</span>
           </div>
           <span className="status-header-subtitle">Idle Thread Status</span>

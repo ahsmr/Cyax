@@ -42,3 +42,7 @@ jobs:
       # 7. Ensure production build succeeds
       - name: Build Project
         run: npm run build
+
+      # # 7. Check the Prettier formatting (Fails CI if any file is not formatted)
+      - name: Check Prettier Formatting
+        run: npx prettier --check src/
