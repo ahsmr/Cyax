@@ -1,0 +1,44 @@
+name: Cyax CI Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-and-benchmark:
+    name: Run Tests & Benchmarks
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repository code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Set up Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      # 3. Install dependencies using package-lock.json
+      - name: Install Dependencies
+        run: npm ci
+
+      # 4. Check for TypeScript compilation errors
+      - name: Typecheck TypeScript
+        run: npx tsc --noEmit
+
+      # 5. Run Unit Tests (Fails CI if any test fails)
+      - name: Run Unit Tests
+        run: npm test
+
+      # 6. Run Benchmarks (Fails CI if benchmark suite fails)
+      - name: Run Performance Benchmarks
+        run: npm run bench
+
+      # 7. Ensure production build succeeds
+      - name: Build Project
+        run: npm run build
