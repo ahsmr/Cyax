@@ -35,12 +35,7 @@ export const ModellingSection: React.FC = () => {
     switch (selectedSystem) {
       case "electrical":
         return <ElectricalSystem />;
-      case "energy-based":
-      case "translational":
-      case "rotational":
-      case "fluidic":
-      case "thermal":
-      default:
+      default: {
         const currentOption = SYSTEM_OPTIONS.find(
           (opt) => opt.id === selectedSystem,
         );
@@ -53,6 +48,7 @@ export const ModellingSection: React.FC = () => {
             </span>
           </div>
         );
+      }
     }
   };
 
