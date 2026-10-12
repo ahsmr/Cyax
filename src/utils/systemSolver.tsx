@@ -35,6 +35,10 @@ interface Rational {
 
 /**
  * Performs polynomial addition: A(s) + B(s)
+ * 
+ * @param a | The first polynomial represented as an array of coefficients.
+ * @param b | The second polynomial represented as an array of coefficients.
+ * @returns | A new polynomial representing the sum of the two input polynomials.
  */
 function polyAdd(a: Poly, b: Poly): Poly {
   const max = Math.max(a.length, b.length);
@@ -47,6 +51,10 @@ function polyAdd(a: Poly, b: Poly): Poly {
 
 /**
  * Performs polynomial subtraction: A(s) - B(s)
+ * 
+ * @param a | The first polynomial represented as an array of coefficients.
+ * @param b | The second polynomial represented as an array of coefficients. 
+ * @returns | A new polynomial representing the difference of the two input polynomials.
  */
 function polySub(a: Poly, b: Poly): Poly {
   const max = Math.max(a.length, b.length);
@@ -59,6 +67,10 @@ function polySub(a: Poly, b: Poly): Poly {
 
 /**
  * Performs polynomial multiplication: A(s) * B(s)
+ * 
+ * @param a | The first polynomial represented as an array of coefficients.
+ * @param b | The second polynomial represented as an array of coefficients. 
+ * @returns |A new polynomial representing the product of the two input polynomials.
  */
 function polyMul(a: Poly, b: Poly): Poly {
   const res = new Array(a.length + b.length - 1).fill(0);
@@ -76,6 +88,10 @@ function polyMul(a: Poly, b: Poly): Poly {
 
 /**
  * Adds two rational expressions: (N1/D1) + (N2/D2) = (N1*D2 + N2*D1) / (D1*D2)
+ * 
+ * @param a | The first rational expression represented as { num: Poly, den: Poly }.
+ * @param b | The second rational expression represented as { num: Poly, den: Poly }.
+ * @returns | A new rational expression representing the sum of the two input rational expressions.
  */
 function addRat(a: Rational, b: Rational): Rational {
   return {
@@ -86,6 +102,10 @@ function addRat(a: Rational, b: Rational): Rational {
 
 /**
  * Subtracts two rational expressions: (N1/D1) - (N2/D2) = (N1*D2 - N2*D1) / (D1*D2)
+ * 
+ * @param a | The first rational expression represented as { num: Poly, den: Poly }.
+ * @param b | The second rational expression represented as { num: Poly, den: Poly }.
+ * @returns | A new rational expression representing the difference of the two input rational expressions.
  */
 function subRat(a: Rational, b: Rational): Rational {
   return {
@@ -96,6 +116,10 @@ function subRat(a: Rational, b: Rational): Rational {
 
 /**
  * Multiplies two rational expressions: (N1/D1) * (N2/D2) = (N1*N2) / (D1*D2)
+ * 
+ * @param a | The first rational expression represented as { num: Poly, den: Poly }.
+ * @param b | The second rational expression represented as { num: Poly, den: Poly }.
+ * @returns | A new rational expression representing the product of the two input rational expressions.
  */
 function mulRat(a: Rational, b: Rational): Rational {
   return {
@@ -106,6 +130,10 @@ function mulRat(a: Rational, b: Rational): Rational {
 
 /**
  * Divides two rational expressions: (N1/D1) / (N2/D2) = (N1*D2) / (D1*N2)
+ * 
+ * @param a | The first rational expression represented as { num: Poly, den: Poly }.
+ * @param b | The second rational expression represented as { num: Poly, den: Poly }.
+ * @returns | A new rational expression representing the quotient of the two input rational expressions.
  */
 function divRat(a: Rational, b: Rational): Rational {
   return {
@@ -122,8 +150,12 @@ function divRat(a: Rational, b: Rational): Rational {
  * * Rational Simplification Engine:
  * Cleans near-zero floating point noise, factors out common powers of 's',
  * and normalizes leading coefficients of denominator polynomials.
+ * 
+ * @param den | The denominator polynomial represented as an array of coefficients.
+ * @param num | The numerator polynomial represented as an array of coefficients.
+ * @returns | A simplified rational expression with cleaned numerator and denominator polynomials.
  */
-function simplifyRational(num: Poly, den: Poly): Rational {
+export function simplifyRational(num: Poly, den: Poly): Rational {
   // Strips trailing near-zero floating point artifacts
   const cleanPoly = (p: Poly): Poly => {
     const cleaned = p.map((c) => (Math.abs(c) < 1e-9 ? 0 : c));
@@ -233,7 +265,7 @@ export function deriveTransferFunction(nodes: Node[], edges: Edge[]): SolverResu
 
     stepByStep.push("Step 1: Construct system matrix for block diagram variables.");
 
-    // Map internal system blocks to index positions for system matrix construction
+   // Map internal system blocks as originally designed for the solver
     const internalNodes = nodes.filter((n) => n.id !== inputNode.id);
     const N = internalNodes.length;
 
@@ -284,6 +316,54 @@ export function deriveTransferFunction(nodes: Node[], edges: Edge[]): SolverResu
         }
       });
     });
+
+    // ==========================================
+    // EXTRACT & PROJECT TO ACTUAL STATE INTEGRATORS FOR DISPLAY
+    // ==========================================
+    const stateNodes = internalNodes.filter((n) => n.type === 'integrator');
+    const nStates = stateNodes.length;
+    const stateIndices = stateNodes.map((n) => nodeIndex.get(n.id)!);
+
+    // Build reduced A_state (nStates x nStates) and B_state (nStates x 1)
+    const A_state: Rational[][] = Array.from({ length: nStates }, (_, r) =>
+      Array.from({ length: nStates }, (_, c) => A[stateIndices[r]][stateIndices[c]])
+    );
+    const B_state: Rational[] = stateIndices.map((origIdx) => B[origIdx]);
+
+    // Build C_state (1 x nStates) and D
+    const outputIncoming = edges.filter((e) => e.target === outputNode.id);
+    const C_state: number[] = new Array(nStates).fill(0);
+    let D = 0;
+
+    outputIncoming.forEach((edge) => {
+      if (edge.source === inputNode.id) {
+        D += Number(outputNode.data?.directGain ?? outputNode.data?.gain ?? 1);
+      } else {
+        // Trace back if connected through a state or intermediate node
+        stateNodes.forEach((sNode, sIdx) => {
+          if (edge.source === sNode.id || edges.some(e => e.target === edge.source && e.source === sNode.id)) {
+            C_state[sIdx] += 1;
+          }
+        });
+      }
+    });
+
+    const formatPolyMatrix = (mat: Rational[][]) =>
+      mat.length === 0 ? "0" : mat.map(row => row.map(cell => polyToLaTeX(cell.num)).join(' & ')).join(' \\\\ ');
+
+    const formatVector = (vec: Rational[]) =>
+      vec.length === 0 ? "0" : vec.map(cell => polyToLaTeX(cell.num)).join(' \\\\ ');
+
+    const aTex = `\\begin{bmatrix} ${formatPolyMatrix(A_state)} \\end{bmatrix}`;
+    const bTex = `\\begin{bmatrix} ${formatVector(B_state)} \\end{bmatrix}`;
+    const cTex = `\\begin{bmatrix} ${C_state.join(' & ')} \\end{bmatrix}`;
+    const dTex = `${D}`;
+
+    // Plain text header string to prevent KaTeX syntax error parsing boxes
+    stepByStep.push("\\text{Step 1 (Cont.): State-Space Model and Formula}");
+    stepByStep.push(`\\dot{x}(t) = ${aTex} x(t) + ${bTex} u(t)`);
+    stepByStep.push(`y(t) = ${cTex} x(t) + ${dTex} u(t)`);
+    stepByStep.push(`H(s) = C(sI - A)^{-1}B + D`);
 
     stepByStep.push("Step 2: Solve linear system via rational Gaussian elimination.");
 
@@ -356,7 +436,7 @@ export function deriveTransferFunction(nodes: Node[], edges: Edge[]): SolverResu
       latexEquation: `H(s) = ${finalLaTeX}`,
       stepByStep,
     };
-    } catch (err: unknown) {
+  } catch (err: unknown) {
     return {
       latexEquation: 'H(s) = \\text{Invalid Topology}',
       stepByStep: ['System matrix equation solving failed.'],
