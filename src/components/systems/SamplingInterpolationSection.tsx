@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Radio, RefreshCw } from 'lucide-react';
-import styles from './SamplingInterpolationSection.module.css';
+import React, { useState } from "react";
+import { ChevronDown, ChevronUp, Radio, RefreshCw } from "lucide-react";
+import styles from "./SamplingInterpolationSection.module.css";
 
 export const SamplingInterpolationSection: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [samplingFreq, setSamplingFreq] = useState<string>('100');
-  const [maxSignalFreq, setMaxSignalFreq] = useState<string>('30');
+  const [samplingFreq, setSamplingFreq] = useState<string>("100");
+  const [maxSignalFreq, setMaxSignalFreq] = useState<string>("30");
   const [samplingResult, setSamplingResult] = useState<string | null>(null);
 
   const calculateNyquist = () => {
@@ -15,11 +15,11 @@ export const SamplingInterpolationSection: React.FC = () => {
 
     if (fs >= nyquistRate) {
       setSamplingResult(
-        `Nyquist Criterion Satisfied (fs = ${fs} Hz ≥ 2*fmax = ${nyquistRate} Hz). Zero-Order Hold (ZOH) reconstructed cleanly without aliasing.`
+        `Nyquist Criterion Satisfied (fs = ${fs} Hz ≥ 2*fmax = ${nyquistRate} Hz). Zero-Order Hold (ZOH) reconstructed cleanly without aliasing.`,
       );
     } else {
       setSamplingResult(
-        `Aliasing Warning! fs (${fs} Hz) is less than Nyquist rate (${nyquistRate} Hz). Increase sampling rate or add anti-aliasing filter.`
+        `Aliasing Warning! fs (${fs} Hz) is less than Nyquist rate (${nyquistRate} Hz). Increase sampling rate or add anti-aliasing filter.`,
       );
     }
   };
@@ -37,7 +37,8 @@ export const SamplingInterpolationSection: React.FC = () => {
       {isOpen && (
         <div className={styles.body}>
           <p className={styles.description}>
-            Analyze discretization ($s \to z$), Nyquist-Shannon theorem, Zero-Order Hold (ZOH), and signal reconstruction.
+            Analyze discretization ($s \to z$), Nyquist-Shannon theorem,
+            Zero-Order Hold (ZOH), and signal reconstruction.
           </p>
 
           <div className={styles.inputGrid}>
@@ -63,7 +64,9 @@ export const SamplingInterpolationSection: React.FC = () => {
             <RefreshCw size={14} /> Compute Discretization Bounds
           </button>
 
-          {samplingResult && <div className={styles.resultBox}>{samplingResult}</div>}
+          {samplingResult && (
+            <div className={styles.resultBox}>{samplingResult}</div>
+          )}
         </div>
       )}
     </div>
