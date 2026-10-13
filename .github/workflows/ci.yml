@@ -47,3 +47,7 @@ jobs:
       # # 7. Check the Prettier formatting (Fails CI if any file is not formatted)
       - name: Check Prettier Formatting
         run: npx prettier --check src/
+
+        # 8. Run Linter Check
+      - name: Run ESLint
+        run: npm run lint
