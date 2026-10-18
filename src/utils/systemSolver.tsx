@@ -33,6 +33,10 @@ const EPSILON = 1e-7;
  * @param p | The polynomial to clean.
  * @returns | The cleaned polynomial with no leading zeros and
  *          | coefficients rounded to zero if they are within EPSILON.
+ *
+ * @example cleanPoly([1, 2, 0, 0]) => [1, 2]
+ * @example cleanPoly([0, 0, 0]) => [0]
+ * @example cleanPoly([1e-8, 2, 3]) => [0, 2, 3]
  */
 function cleanPoly(p: Poly): Poly {
   const cleaned = p.map((c) => (Math.abs(c) < EPSILON ? 0 : c));
@@ -41,6 +45,16 @@ function cleanPoly(p: Poly): Poly {
   return len === 0 ? [0] : cleaned.slice(0, len);
 }
 
+/**
+ * Adds two polynomials together.
+ * @param a | The first polynomial.
+ * @param b | The second polynomial.
+ * @returns | The resulting polynomial after addition.
+ *
+ * @example polyAdd([1, 2], [3, 4, 5]) => [4, 6, 5]
+ * @example polyAdd([1, 2, 3], [-1, -2]) => [0, 0, 3]
+ * @example polyAdd([1, 2, 3], [-1, -2, -3]) => [0]
+ */
 function polyAdd(a: Poly, b: Poly): Poly {
   const max = Math.max(a.length, b.length);
   const res = new Array(max).fill(0);
@@ -50,6 +64,15 @@ function polyAdd(a: Poly, b: Poly): Poly {
   return cleanPoly(res);
 }
 
+/**
+ *  Subtracts polynomial b from polynomial a.
+ * @param a | The polynomial to subtract from.
+ * @param b | The polynomial to subtract.
+ * @returns | The resulting polynomial after subtraction.
+ *
+ * @example polySub([1, 2, 3], [1, 2]) => [0, 0, 3]
+ * @example polySub([1, 2, 3], [1, 2, 3]) => [0]
+ */
 function polySub(a: Poly, b: Poly): Poly {
   const max = Math.max(a.length, b.length);
   const res = new Array(max).fill(0);
@@ -59,6 +82,16 @@ function polySub(a: Poly, b: Poly): Poly {
   return cleanPoly(res);
 }
 
+/**
+ *  Multiplies two polynomials together.
+ * @param a | The first polynomial.
+ * @param b | The second polynomial.
+ * @returns | The resulting polynomial after multiplication.
+ *
+ * @example polyMul([1, 2], [3, 4]) => [3, 10, 8]
+ * @example polyMul([1, 0, 2], [0, 1]) => [0, 1, 0, 2]
+ * @example polyMul([0], [1, 2, 3]) => [0]
+ */
 function polyMul(a: Poly, b: Poly): Poly {
   if ((a.length === 1 && a[0] === 0) || (b.length === 1 && b[0] === 0))
     return [0];
@@ -71,6 +104,24 @@ function polyMul(a: Poly, b: Poly): Poly {
   return cleanPoly(res);
 }
 
+/**
+ *  Divides polynomial a by polynomial b, returning the quotient and remainder.
+ * @param a | The dividend polynomial.
+ * @param b | The divisor polynomial.
+ * @returns | An object containing the quotient and remainder polynomials.
+ *
+ * @example
+ * // Dividing (s^2 + 3s + 2) by (s + 1)
+ * // A = [2, 3, 1], B = [1, 1] => Q = (s + 2) => [2, 1], R = 0 => [0]
+ * polyDivMod([2, 3, 1], [1, 1]);
+ * // => { q: [2, 1], r: [0] }
+ *
+ * @example
+ * // Dividing (s^2 + 3s + 5) by (s + 1)
+ * // A = [5, 3, 1], B = [1, 1] => Q = (s + 2) => [2, 1], R = 3 => [3]
+ * polyDivMod([5, 3, 1], [1, 1]);
+ * // => { q: [2, 1], r: [3] }
+ */
 function polyDivMod(a: Poly, b: Poly): { q: Poly; r: Poly } {
   let r = [...a];
   const q = new Array(Math.max(0, a.length - b.length + 1)).fill(0);
@@ -88,6 +139,22 @@ function polyDivMod(a: Poly, b: Poly): { q: Poly; r: Poly } {
   return { q: cleanPoly(q), r: cleanPoly(r) };
 }
 
+/**
+ * Computes the greatest common divisor (GCD) of two polynomials.
+ * @param a | The first polynomial.
+ * @param b | The second polynomial.
+ * @returns | The GCD polynomial of a and b, normalized to have a leading coefficient of 1.
+ *
+ * @example
+ * // GCD of (s^2 + 3s + 2) and (s^2 + 4s + 3) -> Common factor is (s + 1)
+ * polyGcd([2, 3, 1], [3, 4, 1]);
+ * // => [1, 1]
+ *
+ * @example
+ * // Coprime polynomials (s^2 + 1) and (s + 2) -> GCD is 1
+ * polyGcd([1, 0, 1], [2, 1]);
+ * // => [1]
+ */
 function polyGcd(a: Poly, b: Poly): Poly {
   let x = cleanPoly(a);
   let y = cleanPoly(b);
@@ -105,6 +172,38 @@ function polyGcd(a: Poly, b: Poly): Poly {
   return cleanPoly(x);
 }
 
+/**
+ * Simplifies a rational function represented by numerator and denominator polynomials.
+ * @param num | The numerator polynomial.
+ * @param den | The denominator polynomial.
+ * @returns | The simplified rational function with
+ *          | the numerator and denominator polynomials reduced by their GCD.
+ * 
+ * Here are accurate @example JSDoc comments for simplifyRational:
+
+TypeScript
+/**
+ * Rational Simplification Engine:
+ * Cancels common polynomial factors (GCD), cancels trailing powers of 's',
+ * and normalizes leading coefficients of denominator polynomials.
+ *
+ * @example
+ * // Cancels common factor (s + 0.25) from numerator and denominator
+ * // (s^2 + 1.25s + 0.25) / (s^3 + 1.0s^2 + 0.3125s + 0.03125) => (s + 1) / (s^2 + 0.75s + 0.125)
+ * simplifyRational([0.25, 1.25, 1], [0.03125, 0.3125, 1.0, 1]);
+ * // => { num: [1, 1], den: [0.125, 0.75, 1] }
+ *
+ * @example
+ * // Zero numerator reduces to 0 / 1
+ * simplifyRational([0, 0], [1, 2]);
+ * // => { num: [0], den: [1] }
+ *
+ * @example
+ * // Normalizes leading coefficient of denominator to 1
+ * // (4s + 2) / (2s^2 + 6s + 4) => (2s + 1) / (s^2 + 3s + 2)
+ * simplifyRational([2, 4], [4, 6, 2]);
+ * // => { num: [1, 2], den: [2, 3, 1] }
+ */
 function simplifyRational(num: Poly, den: Poly): Rational {
   let n = cleanPoly(num);
   let d = cleanPoly(den);
@@ -134,6 +233,11 @@ function simplifyRational(num: Poly, den: Poly): Rational {
 // 3. LATEX FORMATTING HELPERS
 // ==========================================
 
+/**
+ * Converts a polynomial to its LaTeX representation.
+ * @param p | The polynomial to convert.
+ * @returns | The LaTeX string representation of the polynomial.
+ */
 function polyToLaTeX(p: Poly): string {
   const cleanP = cleanPoly(p);
   const len = cleanP.length;
@@ -168,6 +272,11 @@ function polyToLaTeX(p: Poly): string {
   return terms.length > 0 ? terms.join(" ") : "0";
 }
 
+/**
+ * Converts a matrix of numbers to its LaTeX representation.
+ * @param matrix | The matrix to convert.
+ * @returns | The LaTeX string representing the matrix.
+ */
 function matrixToLaTeX(matrix: number[][]): string {
   const rows = matrix.map((row) =>
     row.map((val) => Number(val.toFixed(4))).join(" & "),
@@ -179,6 +288,11 @@ function matrixToLaTeX(matrix: number[][]): string {
 // 4. SYMBOLIC MATRIX ALGEBRA FOR (sI - A)^(-1)
 // ==========================================
 
+/**
+ * Computes the determinant of a matrix of polynomials.
+ * @param matrix | The matrix of polynomials.
+ * @returns | The determinant polynomial of the matrix.
+ */
 function polyDeterminant(matrix: Poly[][]): Poly {
   const n = matrix.length;
   if (n === 1) return matrix[0][0];
@@ -206,6 +320,11 @@ function polyDeterminant(matrix: Poly[][]): Poly {
   return det;
 }
 
+/**
+ * Computes the adjugate of a matrix of polynomials.
+ * @param matrix | The matrix of polynomials.
+ * @returns | The adjugate matrix as a matrix of polynomials.
+ */
 function polyAdjugate(matrix: Poly[][]): Poly[][] {
   const n = matrix.length;
   const adj: Poly[][] = Array.from({ length: n }, () =>
@@ -240,6 +359,14 @@ function polyAdjugate(matrix: Poly[][]): Poly[][] {
 /**
  * Derives the Transfer Function H(s) = C(sI - A)^(-1)B + D
  * by constructing continuous-time state-space matrices A, B, C, D directly from the diagram.
+ * @param nodes | The array of nodes representing the system diagram.
+ * @param edges | The array of edges representing the connections between nodes.
+ * @returns | The SolverResult containing the LaTeX equation and step-by-step derivation.
+ *
+ * @example
+ * // Given a system with nodes and edges representing a state-space system,
+ * // derive the transfer function H(s).
+ * const result = deriveTransferFunction(nodes, edges);
  */
 export function deriveTransferFunction(
   nodes: Node[],
