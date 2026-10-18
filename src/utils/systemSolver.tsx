@@ -4,32 +4,23 @@ import type { Node, Edge } from "@xyflow/react";
 // 1. TYPE DEFINITIONS & INTERFACES
 // ==========================================
 
-/**
- * Output data structure returned by the system transfer function solver engine.
- */
 export interface SolverResult {
   latexEquation: string; // The formatted final LaTeX equation H(s)
-  stepByStep: string[]; // Array of LaTeX or textual derivation steps
+  stepByStep: string[]; // Step-by-step state-space derivation details
   error?: string; // Optional error details on calculation failure
 }
 
 /**
- * Polynomial representation in Laplace variable 's':
- * An array of coefficients where index `i` corresponds to the coefficient of `s^i`.
- * Example: [2, 3, 1] represents 1*s^2 + 3*s + 2
+ * Polynomial in s, indexed by power.
+ * [c0, c1, c2] => c0 + c1*s + c2*s^2
  */
 type Poly = number[];
 
-/**
- * Rational Transfer Function in Laplace Domain:
- * Represents a fraction with polynomial numerator and denominator: N(s) / D(s)
- */
 interface Rational {
   num: Poly;
   den: Poly;
 }
 
-// Numerical tolerance for clean floating-point comparisons
 const EPSILON = 1e-7;
 
 // ==========================================
@@ -37,7 +28,11 @@ const EPSILON = 1e-7;
 // ==========================================
 
 /**
- * Strips trailing zero coefficients and snaps near-zero floating noise to exact 0.
+ * cleans a polynomial by removing leading zeros and rounding near-zero coefficients to zero.
+ *
+ * @param p | The polynomial to clean.
+ * @returns | The cleaned polynomial with no leading zeros and
+ *          | coefficients rounded to zero if they are within EPSILON.
  */
 function cleanPoly(p: Poly): Poly {
   const cleaned = p.map((c) => (Math.abs(c) < EPSILON ? 0 : c));
@@ -46,9 +41,6 @@ function cleanPoly(p: Poly): Poly {
   return len === 0 ? [0] : cleaned.slice(0, len);
 }
 
-/**
- * Performs polynomial addition: A(s) + B(s)
- */
 function polyAdd(a: Poly, b: Poly): Poly {
   const max = Math.max(a.length, b.length);
   const res = new Array(max).fill(0);
@@ -58,9 +50,6 @@ function polyAdd(a: Poly, b: Poly): Poly {
   return cleanPoly(res);
 }
 
-/**
- * Performs polynomial subtraction: A(s) - B(s)
- */
 function polySub(a: Poly, b: Poly): Poly {
   const max = Math.max(a.length, b.length);
   const res = new Array(max).fill(0);
@@ -70,9 +59,6 @@ function polySub(a: Poly, b: Poly): Poly {
   return cleanPoly(res);
 }
 
-/**
- * Performs polynomial multiplication: A(s) * B(s)
- */
 function polyMul(a: Poly, b: Poly): Poly {
   if ((a.length === 1 && a[0] === 0) || (b.length === 1 && b[0] === 0))
     return [0];
@@ -85,9 +71,6 @@ function polyMul(a: Poly, b: Poly): Poly {
   return cleanPoly(res);
 }
 
-/**
- * Polynomial long division: Returns quotient Q(s) and remainder R(s) such that A(s) = Q(s)*B(s) + R(s)
- */
 function polyDivMod(a: Poly, b: Poly): { q: Poly; r: Poly } {
   let r = [...a];
   const q = new Array(Math.max(0, a.length - b.length + 1)).fill(0);
@@ -105,9 +88,6 @@ function polyDivMod(a: Poly, b: Poly): { q: Poly; r: Poly } {
   return { q: cleanPoly(q), r: cleanPoly(r) };
 }
 
-/**
- * Calculates Greatest Common Divisor (GCD) of two polynomials via Euclidean Algorithm.
- */
 function polyGcd(a: Poly, b: Poly): Poly {
   let x = cleanPoly(a);
   let y = cleanPoly(b);
@@ -125,15 +105,6 @@ function polyGcd(a: Poly, b: Poly): Poly {
   return cleanPoly(x);
 }
 
-// ==========================================
-// 3. RATIONAL EXPRESSION ARITHMETIC
-// ==========================================
-
-/**
- * Rational Simplification Engine:
- * Cancels common polynomial factors (GCD), cancels trailing powers of 's',
- * and normalizes leading coefficients of denominator polynomials.
- */
 function simplifyRational(num: Poly, den: Poly): Rational {
   let n = cleanPoly(num);
   let d = cleanPoly(den);
@@ -142,14 +113,12 @@ function simplifyRational(num: Poly, den: Poly): Rational {
     return { num: [0], den: [1] };
   }
 
-  // Cancel polynomial GCD factors (e.g., s + 0.25)
   const gcd = polyGcd(n, d);
   if (gcd.length > 1) {
     n = polyDivMod(n, gcd).q;
     d = polyDivMod(d, gcd).q;
   }
 
-  // Normalize denominator's leading coefficient to 1
   if (d.length > 0) {
     const leadD = d[d.length - 1];
     if (Math.abs(leadD) > EPSILON && Math.abs(leadD - 1) > EPSILON) {
@@ -161,49 +130,10 @@ function simplifyRational(num: Poly, den: Poly): Rational {
   return { num: cleanPoly(n), den: cleanPoly(d) };
 }
 
-/**
- * Adds two rational expressions: (N1/D1) + (N2/D2) = (N1*D2 + N2*D1) / (D1*D2)
- */
-function addRat(a: Rational, b: Rational): Rational {
-  return simplifyRational(
-    polyAdd(polyMul(a.num, b.den), polyMul(b.num, a.den)),
-    polyMul(a.den, b.den),
-  );
-}
-
-/**
- * Subtracts two rational expressions: (N1/D1) - (N2/D2) = (N1*D2 - N2*D1) / (D1*D2)
- */
-function subRat(a: Rational, b: Rational): Rational {
-  return simplifyRational(
-    polySub(polyMul(a.num, b.den), polyMul(b.num, a.den)),
-    polyMul(a.den, b.den),
-  );
-}
-
-/**
- * Multiplies two rational expressions: (N1/D1) * (N2/D2) = (N1*N2) / (D1*D2)
- */
-function mulRat(a: Rational, b: Rational): Rational {
-  return simplifyRational(polyMul(a.num, b.num), polyMul(a.den, b.den));
-}
-
-/**
- * Divides two rational expressions: (N1/D1) / (N2/D2) = (N1*D2) / (D1*N2)
- */
-function divRat(a: Rational, b: Rational): Rational {
-  return simplifyRational(polyMul(a.num, b.den), polyMul(a.den, b.num));
-}
-
 // ==========================================
-// 4. SIMPLIFICATION & LATEX FORMATTING
+// 3. LATEX FORMATTING HELPERS
 // ==========================================
 
-/**
- * LaTeX Converter:
- * Converts a polynomial coefficient array into a clean formatted LaTeX string.
- * Example: [3, 0, 1] -> "s^{2} + 3"
- */
 function polyToLaTeX(p: Poly): string {
   const cleanP = cleanPoly(p);
   const len = cleanP.length;
@@ -217,7 +147,6 @@ function polyToLaTeX(p: Poly): string {
     const roundedCoeff = Number(coeff.toFixed(4));
     const absCoeff = Math.abs(roundedCoeff);
 
-    // Determine string representation of term
     const termStr =
       i === 0
         ? `${absCoeff}`
@@ -239,18 +168,78 @@ function polyToLaTeX(p: Poly): string {
   return terms.length > 0 ? terms.join(" ") : "0";
 }
 
+function matrixToLaTeX(matrix: number[][]): string {
+  const rows = matrix.map((row) =>
+    row.map((val) => Number(val.toFixed(4))).join(" & "),
+  );
+  return `\\begin{bmatrix} ${rows.join(" \\\\ ")} \\end{bmatrix}`;
+}
+
 // ==========================================
-// 5. MAIN TRANSFER FUNCTION SOLVER
+// 4. SYMBOLIC MATRIX ALGEBRA FOR (sI - A)^(-1)
+// ==========================================
+
+function polyDeterminant(matrix: Poly[][]): Poly {
+  const n = matrix.length;
+  if (n === 1) return matrix[0][0];
+  if (n === 2) {
+    return polySub(
+      polyMul(matrix[0][0], matrix[1][1]),
+      polyMul(matrix[0][1], matrix[1][0]),
+    );
+  }
+
+  let det: Poly = [0];
+  for (let c = 0; c < n; c++) {
+    const subMatrix: Poly[][] = [];
+    for (let r = 1; r < n; r++) {
+      subMatrix.push(matrix[r].filter((_, colIdx) => colIdx !== c));
+    }
+    const minorDet = polyDeterminant(subMatrix);
+    const term = polyMul(matrix[0][c], minorDet);
+    if (c % 2 === 0) {
+      det = polyAdd(det, term);
+    } else {
+      det = polySub(det, term);
+    }
+  }
+  return det;
+}
+
+function polyAdjugate(matrix: Poly[][]): Poly[][] {
+  const n = matrix.length;
+  const adj: Poly[][] = Array.from({ length: n }, () =>
+    Array.from({ length: n }, () => [0]),
+  );
+
+  if (n === 1) {
+    adj[0][0] = [1];
+    return adj;
+  }
+
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      const subMatrix: Poly[][] = [];
+      for (let i = 0; i < n; i++) {
+        if (i === r) continue;
+        subMatrix.push(matrix[i].filter((_, colIdx) => colIdx !== c));
+      }
+      const minorDet = polyDeterminant(subMatrix);
+      const sign = (r + c) % 2 === 0 ? 1 : -1;
+      adj[c][r] = sign === 1 ? minorDet : polyMul([-1], minorDet);
+    }
+  }
+
+  return adj;
+}
+
+// ==========================================
+// 5. MAIN TRANSFER FUNCTION SOLVER (STATE-SPACE METHOD)
 // ==========================================
 
 /**
- * Derive Transfer Function Engine:
- * Analyzes graph nodes and edges to build a symbolic block diagram matrix equation
- * and solves for the transfer function H(s) = Y(s) / U(s) via rational Gaussian elimination.
- *
- * @param nodes Array of React Flow canvas nodes
- * @param edges Array of React Flow canvas edges
- * @returns LaTeX equation string and step-by-step derivation details
+ * Derives the Transfer Function H(s) = C(sI - A)^(-1)B + D
+ * by constructing continuous-time state-space matrices A, B, C, D directly from the diagram.
  */
 export function deriveTransferFunction(
   nodes: Node[],
@@ -259,7 +248,6 @@ export function deriveTransferFunction(
   try {
     const stepByStep: string[] = [];
 
-    // Identify boundary input and output signal nodes
     const inputNode = nodes.find((n) => n.type === "input" || n.id === "u_in");
     const outputNode = nodes.find(
       (n) => n.type === "output" || n.id === "y_out",
@@ -272,121 +260,200 @@ export function deriveTransferFunction(
       };
     }
 
-    stepByStep.push(
-      "Step 1: Construct system matrix for block diagram variables.",
+    // Identify state variables (outputs of integrator blocks)
+    const integratorNodes = nodes.filter((n) => n.type === "integrator");
+    const numStates = integratorNodes.length;
+
+    const internalNodes = nodes.filter(
+      (n) => n.id !== inputNode.id && n.id !== outputNode.id,
     );
 
-    // Map internal system blocks to index positions for system matrix construction
-    const internalNodes = nodes.filter((n) => n.id !== inputNode.id);
-    const N = internalNodes.length;
+    // Map internal non-integrator node signals algebraically
+    const nonIntegrators = internalNodes.filter((n) => n.type !== "integrator");
+    const nodeIndexMap = new Map<string, number>();
+    nonIntegrators.forEach((n, idx) => nodeIndexMap.set(n.id, idx));
 
-    const nodeIndex = new Map<string, number>();
-    internalNodes.forEach((n, idx) => nodeIndex.set(n.id, idx));
+    // Solve for signal path gain matrix M mapping inputs [u, x1..xn] to internal nodes & integrators
+    const K = nonIntegrators.length;
+    const M_node = Array.from({ length: K }, () => Array(K).fill(0));
+    const M_u = Array(K).fill(0);
+    const M_x = Array.from({ length: K }, () => Array(numStates).fill(0));
 
-    // Initialize System Matrix A (N x N identity) and Input Vector B (N x 1 zeros)
-    const A: Rational[][] = Array.from({ length: N }, (_, r) =>
-      Array.from({ length: N }, (_, c) => ({
-        num: r === c ? [1] : [0],
-        den: [1],
-      })),
-    );
-
-    const B: Rational[] = Array.from({ length: N }, () => ({
-      num: [0],
-      den: [1],
-    }));
-
-    // Populate matrix A and vector B by evaluating block transfer characteristics
-    internalNodes.forEach((node) => {
-      const row = nodeIndex.get(node.id)!;
+    nonIntegrators.forEach((node, i) => {
       const incoming = edges.filter((e) => e.target === node.id);
+      incoming.forEach((e) => {
+        const branchGain =
+          node.type === "gain"
+            ? Number(node.data?.gain ?? 1)
+            : node.type === "summing" && e.targetHandle === "in-minus"
+              ? -1
+              : 1;
 
-      // Determine internal transfer ratio of block node
-      let nodeTransfer: Rational = { num: [1], den: [1] };
-      if (node.type === "gain") {
-        const K = Number(node.data?.gain ?? 1);
-        nodeTransfer = { num: [K], den: [1] };
-      } else if (node.type === "integrator") {
-        nodeTransfer = { num: [1], den: [0, 1] }; // 1 / s
-      }
-
-      // Process incoming connections and negative feedback flags
-      incoming.forEach((edge) => {
-        let signGain: Rational = { num: [1], den: [1] };
-        if (node.type === "summing" && edge.targetHandle === "in-minus") {
-          signGain = { num: [-1], den: [1] };
-        }
-
-        const branchGain = mulRat(signGain, nodeTransfer);
-
-        if (edge.source === inputNode.id) {
-          B[row] = addRat(B[row], branchGain);
-        } else if (nodeIndex.has(edge.source)) {
-          const col = nodeIndex.get(edge.source)!;
-          A[row][col] = subRat(A[row][col], branchGain);
+        if (e.source === inputNode.id) {
+          M_u[i] += branchGain;
+        } else {
+          const stateIdx = integratorNodes.findIndex((x) => x.id === e.source);
+          if (stateIdx !== -1) {
+            M_x[i][stateIdx] += branchGain;
+          } else if (nodeIndexMap.has(e.source)) {
+            const srcIdx = nodeIndexMap.get(e.source)!;
+            M_node[i][srcIdx] += branchGain;
+          }
         }
       });
     });
 
-    stepByStep.push(
-      "Step 2: Solve linear system via rational Gaussian elimination.",
+    // Gaussian Elimination for Non-Integrator Block Relationships: (I - M_node) * V = M_u * u + M_x * x
+    const I_minus_M = Array.from({ length: K }, (_, r) =>
+      Array.from({ length: K }, (_, c) => (r === c ? 1 : 0) - M_node[r][c]),
     );
 
-    // Perform Symbolic Rational Gaussian Elimination
-    for (let i = 0; i < N; i++) {
-      let pivotRow = i;
-      while (
-        pivotRow < N &&
-        (A[pivotRow][i].num.length === 0 ||
-          A[pivotRow][i].num.every((c) => Math.abs(c) < EPSILON))
-      ) {
-        pivotRow++;
-      }
+    const sol_u = [...M_u];
+    const sol_x = M_x.map((row) => [...row]);
 
-      if (pivotRow === N) continue;
+    for (let i = 0; i < K; i++) {
+      const pivot = I_minus_M[i][i];
+      if (Math.abs(pivot) < EPSILON) continue;
 
-      if (pivotRow !== i) {
-        [A[i], A[pivotRow]] = [A[pivotRow], A[i]];
-        [B[i], B[pivotRow]] = [B[pivotRow], B[i]];
-      }
+      for (let j = 0; j < K; j++) I_minus_M[i][j] /= pivot;
+      sol_u[i] /= pivot;
+      for (let s = 0; s < numStates; s++) sol_x[i][s] /= pivot;
 
-      const pivot = A[i][i];
-
-      for (let j = i; j < N; j++) {
-        A[i][j] = divRat(A[i][j], pivot);
-      }
-      B[i] = divRat(B[i], pivot);
-
-      for (let r = 0; r < N; r++) {
+      for (let r = 0; r < K; r++) {
         if (r !== i) {
-          const factor = A[r][i];
-          if (
-            factor.num.length > 0 &&
-            factor.num.some((c) => Math.abs(c) >= EPSILON)
-          ) {
-            for (let c = i; c < N; c++) {
-              A[r][c] = subRat(A[r][c], mulRat(factor, A[i][c]));
-            }
-            B[r] = subRat(B[r], mulRat(factor, B[i]));
-          }
+          const factor = I_minus_M[r][i];
+          for (let j = 0; j < K; j++)
+            I_minus_M[r][j] -= factor * I_minus_M[i][j];
+          sol_u[r] -= factor * sol_u[i];
+          for (let s = 0; s < numStates; s++)
+            sol_x[r][s] -= factor * sol_x[i][s];
         }
       }
     }
 
-    // Retrieve target output node index
-    const outputIdx = nodeIndex.get(outputNode.id);
-    if (outputIdx === undefined) {
-      return {
-        latexEquation: "H(s) = \\text{Invalid Topology}",
-        stepByStep: ["Output node missing from matrix formulation."],
-      };
+    // Helper function to solve signal value at any node as a linear combination of (x, u)
+    const resolveNodeSignal = (targetId: string) => {
+      const coeffs_x = Array(numStates).fill(0);
+      let coeff_u = 0;
+
+      if (targetId === inputNode.id) {
+        coeff_u = 1;
+        return { coeffs_x, coeff_u };
+      }
+
+      const stateIdx = integratorNodes.findIndex((x) => x.id === targetId);
+      if (stateIdx !== -1) {
+        coeffs_x[stateIdx] = 1;
+        return { coeffs_x, coeff_u };
+      }
+
+      const nodeIdx = nodeIndexMap.get(targetId);
+      if (nodeIdx !== undefined) {
+        coeff_u = sol_u[nodeIdx];
+        for (let s = 0; s < numStates; s++) coeffs_x[s] = sol_x[nodeIdx][s];
+      }
+
+      return { coeffs_x, coeff_u };
+    };
+
+    // Construct Continuous State-Space Matrices A, B, C, D
+    const A_mat: number[][] = Array.from({ length: numStates }, () =>
+      Array(numStates).fill(0),
+    );
+    const B_mat: number[][] = Array.from({ length: numStates }, () => [0]);
+    const C_mat: number[][] = [Array(numStates).fill(0)];
+    let D_val = 0;
+
+    // Populate A and B from integrator inputs (x_dot)
+    integratorNodes.forEach((intNode, i) => {
+      const incomingEdges = edges.filter((e) => e.target === intNode.id);
+      incomingEdges.forEach((e) => {
+        const { coeffs_x, coeff_u } = resolveNodeSignal(e.source);
+        for (let j = 0; j < numStates; j++) {
+          A_mat[i][j] += coeffs_x[j];
+        }
+        B_mat[i][0] += coeff_u;
+      });
+    });
+
+    // Populate C and D from output node inputs (y)
+    const outEdges = edges.filter((e) => e.target === outputNode.id);
+    outEdges.forEach((e) => {
+      const { coeffs_x, coeff_u } = resolveNodeSignal(e.source);
+      for (let j = 0; j < numStates; j++) {
+        C_mat[0][j] += coeffs_x[j];
+      }
+      D_val += coeff_u;
+    });
+
+    // Format matrix string representations
+    const latexA = matrixToLaTeX(A_mat);
+    const latexB = matrixToLaTeX(B_mat);
+    const latexC = matrixToLaTeX(C_mat);
+    const latexD = `[${Number(D_val.toFixed(4))}]`;
+
+    // Step 1: Formulate with numerical state-space system equations
+    stepByStep.push(
+      `\\text{Step 1: Formulate Continuous-Time State-Space Representation}\\\\` +
+        `\\dot{\\mathbf{x}}(t) = ${latexA}\\mathbf{x}(t) + ${latexB}u(t)\\\\` +
+        `y(t) = ${latexC}\\mathbf{x}(t) + ${latexD}u(t)`,
+    );
+
+    // Step 2: Clean KaTeX transfer function formula string
+    stepByStep.push(
+      "\\text{Step 2: Calculate Transfer Function } H(s) = \\mathbf{C}(s\\mathbf{I} - \\mathbf{A})^{-1}\\mathbf{B} + D",
+    );
+
+    let finalNum: Poly = [0];
+    let finalDen: Poly = [1];
+    let unsimplifiedNum: Poly = [0];
+    let unsimplifiedDen: Poly = [1];
+
+    if (numStates === 0) {
+      // 0th Order / Pure Algebraic System
+      finalNum = [D_val];
+      finalDen = [1];
+      unsimplifiedNum = [D_val];
+      unsimplifiedDen = [1];
+    } else {
+      // Construct (sI - A)
+      const sI_minus_A: Poly[][] = Array.from({ length: numStates }, (_, r) =>
+        Array.from({ length: numStates }, (_, c) => {
+          if (r === c) {
+            return [-A_mat[r][c], 1]; // s - A[r][c]
+          }
+          return [-A_mat[r][c]]; // -A[r][c]
+        }),
+      );
+
+      // Compute det(sI - A) and adj(sI - A)
+      const detPoly = polyDeterminant(sI_minus_A);
+      const adjMatrix = polyAdjugate(sI_minus_A);
+
+      // Compute C * adj(sI - A) * B
+      let numPoly: Poly = [0];
+      for (let r = 0; r < numStates; r++) {
+        for (let c = 0; c < numStates; c++) {
+          const factor = C_mat[0][r] * B_mat[c][0];
+          if (Math.abs(factor) > EPSILON) {
+            const term = polyMul([factor], adjMatrix[r][c]);
+            numPoly = polyAdd(numPoly, term);
+          }
+        }
+      }
+
+      // Add Direct Feedthrough D * det(sI - A)
+      if (Math.abs(D_val) > EPSILON) {
+        numPoly = polyAdd(numPoly, polyMul([D_val], detPoly));
+      }
+
+      unsimplifiedNum = cleanPoly(numPoly);
+      unsimplifiedDen = cleanPoly(detPoly);
+
+      const simplified = simplifyRational(numPoly, detPoly);
+      finalNum = simplified.num;
+      finalDen = simplified.den;
     }
-
-    // Simplify the resulting rational expression to cancel common factors & powers of s
-    const simplified = simplifyRational(B[outputIdx].num, B[outputIdx].den);
-
-    let finalNum = simplified.num;
-    let finalDen = simplified.den;
 
     // Ensure leading coefficient of denominator is positive
     let denLen = finalDen.length;
@@ -397,12 +464,20 @@ export function deriveTransferFunction(
     }
 
     // Convert polynomials to LaTeX strings
+    const rawNumStr = polyToLaTeX(unsimplifiedNum);
+    const rawDenStr = polyToLaTeX(unsimplifiedDen);
+    const unsimplifiedLaTeX =
+      rawDenStr === "1" ? rawNumStr : `\\frac{${rawNumStr}}{${rawDenStr}}`;
+
     const numStr = polyToLaTeX(finalNum);
     const denStr = polyToLaTeX(finalDen);
-
     const finalLaTeX = denStr === "1" ? numStr : `\\frac{${numStr}}{${denStr}}`;
 
-    stepByStep.push("Step 3: Simplify and output transfer function H(s).");
+    stepByStep.push(
+      `\\text{Step 3: Unsimplified Expression vs. Simplified Transfer Function}\\\\` +
+        `\\text{Unsimplified: } H(s) = ${unsimplifiedLaTeX}\\\\` +
+        `\\text{Simplified: } H(s) = ${finalLaTeX}`,
+    );
 
     return {
       latexEquation: `H(s) = ${finalLaTeX}`,
@@ -411,7 +486,7 @@ export function deriveTransferFunction(
   } catch (err: unknown) {
     return {
       latexEquation: "H(s) = \\text{Invalid Topology}",
-      stepByStep: ["System matrix equation solving failed."],
+      stepByStep: ["Continuous State-Space matrix solving failed."],
       error: err instanceof Error ? err.message : String(err),
     };
   }

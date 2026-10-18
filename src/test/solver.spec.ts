@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { Node, Edge } from "@xyflow/react";
-import { deriveTransferFunction } from "../utils/systemSolver"; // adjust path as needed
+import { deriveTransferFunction } from "../utils/systemSolver";
 
 const createNode = (id: string, type: string, data = {}): Node => ({
   id,
@@ -23,6 +23,24 @@ const createEdge = (
 
 describe("deriveTransferFunction Engine", () => {
   describe("State-Space Continuous System Transfer Function", () => {
+    /**
+     * System 0: Initial 2-State Coupled Feedback System
+     * State Equations:
+     *   x1' = -0.5*x1 - x2
+     *   x2' = -0.25*x2 + u
+     *   y   = -0.5*x1 + x2
+     *
+     * Continuous State-Space Matrices:
+     *   A = [ -0.5   -1.0 ]
+     *       [  0.0  -0.25 ]
+     *   B = [ 0 ]
+     *       [ 1 ]
+     *   C = [ -0.5  1.0 ]
+     *   D = [ 0 ]
+     *
+     * Transfer Function:
+     *   H(s) = (s + 1) / (s^2 + 0.75s + 0.125)
+     */
     it("solves 2-state continuous system H(s) = (s + 1) / (s^2 + 0.75s + 0.125)", () => {
       const nodes: Node[] = [
         createNode("u_in", "input"),
@@ -30,13 +48,13 @@ describe("deriveTransferFunction Engine", () => {
         // State x2 subsystem: x2' = -0.25*x2 + u
         createNode("sum_x2", "summing"),
         createNode("int_x2", "integrator"),
-        createNode("gain_a22", "gain", { gain: 0.25 }), // positive feedback magnitude
+        createNode("gain_a22", "gain", { gain: 0.25 }),
 
         // State x1 subsystem: x1' = -0.5*x1 - x2
         createNode("sum_x1", "summing"),
         createNode("int_x1", "integrator"),
-        createNode("gain_a11", "gain", { gain: 0.5 }), // positive feedback magnitude
-        createNode("gain_a12", "gain", { gain: 1 }), // coupling magnitude
+        createNode("gain_a11", "gain", { gain: 0.5 }),
+        createNode("gain_a12", "gain", { gain: 1 }),
 
         // Output junction: y = -0.5*x1 + x2
         createNode("gain_c1", "gain", { gain: -0.5 }),
@@ -46,24 +64,19 @@ describe("deriveTransferFunction Engine", () => {
       ];
 
       const edges: Edge[] = [
-        // u(t) -> sum_x2 -> int_x2 (x2)
         createEdge("e1", "u_in", "sum_x2"),
         createEdge("e2", "sum_x2", "int_x2"),
 
-        // Negative feedback loop for x2: -0.25 * x2
         createEdge("e3", "int_x2", "gain_a22"),
-        createEdge("e4", "gain_a22", "sum_x2", "in-minus"), // negative feedback handle
+        createEdge("e4", "gain_a22", "sum_x2", "in-minus"),
 
-        // x2 -> x1 coupling: -1 * x2 -> sum_x1
         createEdge("e5", "int_x2", "gain_a12"),
-        createEdge("e6", "gain_a12", "sum_x1", "in-minus"), // negative coupling
+        createEdge("e6", "gain_a12", "sum_x1", "in-minus"),
 
-        // x1 state loop: -0.5 * x1
         createEdge("e7", "sum_x1", "int_x1"),
         createEdge("e8", "int_x1", "gain_a11"),
-        createEdge("e9", "gain_a11", "sum_x1", "in-minus"), // negative feedback handle
+        createEdge("e9", "gain_a11", "sum_x1", "in-minus"),
 
-        // Output paths: y(t) = -0.5*x1 + 1*x2
         createEdge("e10", "int_x1", "gain_c1"),
         createEdge("e11", "gain_c1", "sum_y"),
         createEdge("e12", "int_x2", "gain_c2"),
@@ -73,9 +86,133 @@ describe("deriveTransferFunction Engine", () => {
 
       const result = deriveTransferFunction(nodes, edges);
 
-      // Verify polynomial form: (s + 1) / (s^2 + 0.75s + 0.125)
       expect(result.latexEquation).toBe(
         "H(s) = \\frac{s + 1}{s^{2} + 0.75s + 0.125}",
+      );
+    });
+
+    /**
+     * System 1: Negative Feedback Loop with Gain, Integrator, and Inner Zero (2nd Order)
+     * State Equations:
+     *   x1' = -5*x1 + x2 + 2*u
+     *   x2' = -x1 + u
+     *   y   = x1
+     *
+     * Continuous State-Space Matrices:
+     *   A = [ -5   1 ]
+     *       [ -1   0 ]
+     *   B = [ 2 ]
+     *       [ 1 ]
+     *   C = [ 1   0 ]
+     *   D = [ 0 ]
+     *
+     * Transfer Function:
+     *   H(s) = (2s + 1) / (s^2 + 5s + 1)
+     */
+    it("solves 2nd-order multi-loop feedback system H(s) = (2s + 1) / (s^2 + 5s + 1)", () => {
+      const nodes: Node[] = [
+        createNode("u_in", "input"),
+
+        createNode("sum_in", "summing"),
+        createNode("gain_ff", "gain", { gain: 2 }),
+        createNode("int_x2", "integrator"),
+        createNode("sum_int1", "summing"),
+        createNode("int_x1", "integrator"),
+        createNode("gain_inner", "gain", { gain: 3 }),
+        createNode("y_out", "output"),
+      ];
+
+      const edges: Edge[] = [
+        createEdge("e1", "u_in", "sum_in"),
+        createEdge("e2", "int_x1", "sum_in", "in-minus"),
+        createEdge("e3", "sum_in", "int_x2"),
+        createEdge("e4", "sum_in", "gain_ff"),
+        createEdge("e5", "gain_ff", "sum_int1"),
+        createEdge("e6", "int_x2", "sum_int1"),
+        createEdge("e7", "int_x1", "gain_inner"),
+        createEdge("e8", "gain_inner", "sum_int1", "in-minus"),
+        createEdge("e9", "sum_int1", "int_x1"),
+        createEdge("e10", "int_x1", "y_out"),
+      ];
+
+      const result = deriveTransferFunction(nodes, edges);
+
+      expect(result.latexEquation).toBe(
+        "H(s) = \\frac{2s + 1}{s^{2} + 5s + 1}",
+      );
+    });
+
+    /**
+     * System 2: 3rd-Order Multi-Loop Control System with Direct Feedthrough
+     * Continuous State-Space Matrices:
+     *   A = [ -1   1   0 ]
+     *       [ -4   0   3 ]
+     *       [ -1   0   0 ]
+     *   B = [ -0.5 ]
+     *       [  2.0 ]
+     *       [  0.5 ]
+     *   C = [ 1   0   0 ]
+     *   D = [ 0.5 ]
+     *
+     * Transfer Function:
+     *   H(s) = (0.5s^3 + 4s + 2) / (s^3 + s^2 + 4s + 2)
+     */
+    it("solves 3rd-order system with direct feedthrough H(s) = (0.5s^3 + 4s + 2) / (s^3 + s^2 + 4s + 2)", () => {
+      const nodes: Node[] = [
+        createNode("u_in", "input"),
+
+        // State 3 Subsystem (x3)
+        createNode("sum_x3", "summing"),
+        createNode("int_x3", "integrator"),
+
+        // Forward gains from x3 to x2
+        createNode("gain_x3_direct", "gain", { gain: 2 }),
+        createNode("gain_x3_deriv", "gain", { gain: 4 }),
+
+        // State 2 Subsystem (x2)
+        createNode("sum_x2", "summing"),
+        createNode("int_x2", "integrator"),
+
+        // Local feedback on x2 (-1 * x1)
+        createNode("sum_x1", "summing"),
+        createNode("int_x1", "integrator"),
+
+        // Feedthrough path
+        createNode("gain_d", "gain", { gain: 0.5 }),
+
+        // Output junction
+        createNode("sum_y", "summing"),
+        createNode("y_out", "output"),
+      ];
+
+      const edges: Edge[] = [
+        createEdge("e1", "u_in", "sum_x3"),
+        createEdge("e2", "sum_y", "sum_x3", "in-minus"),
+        createEdge("e3", "sum_x3", "int_x3"),
+
+        createEdge("e4", "int_x3", "gain_x3_direct"),
+        createEdge("e5", "gain_x3_direct", "sum_x2"),
+
+        createEdge("e6", "sum_x3", "gain_x3_deriv"),
+        createEdge("e7", "gain_x3_deriv", "sum_x2"),
+
+        createEdge("e8", "sum_x2", "int_x2"),
+        createEdge("e9", "int_x2", "sum_x1"),
+
+        createEdge("e10", "sum_y", "sum_x1", "in-minus"),
+        createEdge("e11", "sum_x1", "int_x1"),
+
+        createEdge("e12", "u_in", "gain_d"),
+        createEdge("e13", "gain_d", "sum_y"),
+
+        createEdge("e14", "int_x1", "sum_y"),
+        createEdge("e15", "sum_y", "y_out"),
+      ];
+
+      const result = deriveTransferFunction(nodes, edges);
+
+      expect(result.latexEquation).toBe(
+        "H(s) = \\frac{0.5s^{3} + 4s + 2}{s^{3} + s^{2} + 4s + 2}",
       );
     });
   });
