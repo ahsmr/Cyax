@@ -1,5 +1,5 @@
 import type { Poly } from "./systemSolver";
-import { cleanPoly } from "./systemSolver";
+// import { cleanPoly } from "./systemSolver";
 /**
  * Represents a single point in a Bode plot,
  * including frequency, magnitude, and phase information.
@@ -54,22 +54,17 @@ interface Complex {
  * @param omega | Frequency in rad/s
  * @returns     | Complex number representing P(j*omega)
  */
-function evalPolyComplexDescending(poly: number[], omega: number): Complex {
-  const poly_clean = cleanPoly(poly); // Making sure to clean the polynomial coefficients
-  // to remove near-zero values and trailing zeros.
+function evalPolyComplex(poly: number[], omega: number): Complex {
   let re = 0;
   let im = 0;
-  const n = poly_clean.length - 1;
 
-  for (let i = 0; i <= n; i++) {
-    const coeff = poly_clean[i];
+  for (let i = 0; i < poly.length; i++) {
+    const coeff = poly[i];
     if (coeff === 0) continue;
 
-    // Power of s is (n - i)
-    const p = n - i;
-    const wPow = Math.pow(omega, p);
-    const mod = p % 4;
-
+    const power = i;
+    const wPow = Math.pow(omega, power);
+    const mod = power % 4;
     if (mod === 0)
       re += coeff * wPow; // (j*w)^0 = +1
     else if (mod === 1)
@@ -82,9 +77,17 @@ function evalPolyComplexDescending(poly: number[], omega: number): Complex {
   return { re, im };
 }
 
+/**
+ *  Calculates the magnitude in decibels (dB) of the transfer function H(jω) = N(jω)/D(jω)
+ *  at a specific angular frequency ω (omega).
+ * @param num   | Numerator polynomial coefficients [c0, c1, ...]
+ * @param den   | Denominator polynomial coefficients [d0, d1, ...]
+ * @param omega | Angular frequency in (rad/s)
+ * @returns     | Magnitude in dB
+ */
 export function calculateAmp(num: Poly, den: Poly, omega: number): number {
-  const N = evalPolyComplexDescending(num, omega);
-  const D = evalPolyComplexDescending(den, omega);
+  const N = evalPolyComplex(num, omega);
+  const D = evalPolyComplex(den, omega);
 
   const numMagSq = Math.max(N.re * N.re + N.im * N.im, 1e-15);
   const denMagSq = Math.max(D.re * D.re + D.im * D.im, 1e-15);
@@ -95,9 +98,17 @@ export function calculateAmp(num: Poly, den: Poly, omega: number): number {
   return logN - logD;
 }
 
+/**
+ *  Calculates the Argument in degrees of the transfer function H(jω) = N(jω)/D(jω)
+ *  at a specific angular frequency ω (omega).
+ * @param num   | Numerator polynomial coefficients [c0, c1, ...]
+ * @param den   | Denominator polynomial coefficients [d0, d1, ...]
+ * @param omega | Angular frequency in rad/s
+ * @returns     | Phase angle in degrees
+ */
 export function calculateArg(num: Poly, den: Poly, omega: number): number {
-  const N = evalPolyComplexDescending(num, omega);
-  const D = evalPolyComplexDescending(den, omega);
+  const N = evalPolyComplex(num, omega);
+  const D = evalPolyComplex(den, omega);
 
   const angleN = Math.atan2(N.im, N.re);
   const angleD = Math.atan2(D.im, D.re);
@@ -140,7 +151,6 @@ export function generateBodeData(
 
     // Raw Phase (-180 to +180)
     let rawPhase = calculateArg(num, den, omega);
-
     // Basic Phase Unwrapping
     if (!hasInitialPhase) {
       lastPhaseUnwrapped = rawPhase;
