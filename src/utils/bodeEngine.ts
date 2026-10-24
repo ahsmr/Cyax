@@ -3,7 +3,7 @@ import type { Poly } from "./systemSolver";
 /**
  * Represents a single point in a Bode plot,
  * including frequency, magnitude, and phase information.
- * 
+ *
  * frequency: Frequency in radians per second (rad/s).
  * frequencyHz: Frequency in Hertz (Hz), calculated as frequency / (2 * π).
  * magnitudeDb: Magnitude in decibels (dB).
@@ -18,7 +18,7 @@ export interface BodePoint {
 
 /**
  * Options for customizing the appearance of the Bode plot when drawn on a canvas.
- * 
+ *
  * title: Optional title for the Bode plot.
  * strokeColorMag: Color for the magnitude plot line (default: "#1e40af").
  * strokeColorPhase: Color for the phase plot line (default: "#1e40af").
@@ -39,7 +39,7 @@ export interface BodeDrawOptions {
 
 /**
  * Represents a complex number with real and imaginary parts.
- * 
+ *
  * re: Real part of the complex number.
  * im: Imaginary part of the complex number.
  */
@@ -303,10 +303,15 @@ export function drawBodePlot(
   const rawStep = magRange / 6;
 
   const magStep =
-    rawStep > 40 ? 50 :
-    rawStep > 20 ? 25 :
-    rawStep > 10 ? 10 :
-    rawStep > 5  ? 5  : 2;
+    rawStep > 40
+      ? 50
+      : rawStep > 20
+        ? 25
+        : rawStep > 10
+          ? 10
+          : rawStep > 5
+            ? 5
+            : 2;
 
   const alignedMinMag = Math.floor(minMag / magStep) * magStep;
   const alignedMaxMag = Math.ceil(maxMag / magStep) * magStep;
@@ -333,10 +338,15 @@ export function drawBodePlot(
   const rawPhaseStep = phaseRange / 6;
 
   const phaseStep =
-    rawPhaseStep > 180 ? 360 :
-    rawPhaseStep > 90  ? 180 :
-    rawPhaseStep > 45  ? 90  :
-    rawPhaseStep > 15  ? 45  : 30;
+    rawPhaseStep > 180
+      ? 360
+      : rawPhaseStep > 90
+        ? 180
+        : rawPhaseStep > 45
+          ? 90
+          : rawPhaseStep > 15
+            ? 45
+            : 30;
 
   const alignedMinPhase = Math.floor(minPhase / phaseStep) * phaseStep;
   const alignedMaxPhase = Math.ceil(maxPhase / phaseStep) * phaseStep;
