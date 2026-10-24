@@ -9,7 +9,7 @@ It automatically converts interactive block diagrams into symbolic transfer func
 ## 🚀 Key Features
 
 * **Interactive Block Diagram Editor:** Visually place, connect, and configure feedback loops, summing junctions, and transfer function blocks using XYFlow.
-* **Symbolic Solver Engine:** Automatically derives closed-loop transfer functions $H(s)$ and linear state-space representations ($A, B, C, D$) via rational Gaussian elimination.
+* **Symbolic Solver Engine:** Automatically derives closed-loop transfer functions $H(s)$ and linear state-space representations ($A, B, C, D$).
 * **LaTeX Math Rendering:** Formats derived transfer functions in mathematical notation powered by KaTeX.
 * **Canvas-Based Bode Plots:** Computes real-time magnitude and phase frequency responses with an animated sweep mode.
 * **Controlled Execution Workflow:** Explicit execution triggers to evaluate complex system configurations on demand.
