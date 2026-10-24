@@ -118,11 +118,31 @@ const initialEdges: Edge[] = [
   },
   { id: "e3", source: "sum_x3", target: "int_x3", markerEnd: defaultMarker },
 
-  { id: "e4", source: "int_x3", target: "gain_x3_direct", markerEnd: defaultMarker },
-  { id: "e5", source: "gain_x3_direct", target: "sum_x2", markerEnd: defaultMarker },
+  {
+    id: "e4",
+    source: "int_x3",
+    target: "gain_x3_direct",
+    markerEnd: defaultMarker,
+  },
+  {
+    id: "e5",
+    source: "gain_x3_direct",
+    target: "sum_x2",
+    markerEnd: defaultMarker,
+  },
 
-  { id: "e6", source: "sum_x3", target: "gain_x3_deriv", markerEnd: defaultMarker },
-  { id: "e7", source: "gain_x3_deriv", target: "sum_x2", markerEnd: defaultMarker },
+  {
+    id: "e6",
+    source: "sum_x3",
+    target: "gain_x3_deriv",
+    markerEnd: defaultMarker,
+  },
+  {
+    id: "e7",
+    source: "gain_x3_deriv",
+    target: "sum_x2",
+    markerEnd: defaultMarker,
+  },
 
   { id: "e8", source: "sum_x2", target: "int_x2", markerEnd: defaultMarker },
   { id: "e9", source: "int_x2", target: "sum_x1", markerEnd: defaultMarker },

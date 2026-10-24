@@ -4,7 +4,6 @@ import { generateBodeData, drawBodePlot } from "../utils/bodeEngine";
 import type { BodePoint } from "../utils/bodeEngine";
 import type { Poly } from "../utils/systemSolver";
 
-
 export interface BodePlotProps {
   numerator: Poly | null;
   denominator: Poly | null;
@@ -33,7 +32,12 @@ export const BodePlot: React.FC<BodePlotProps> = ({
    * Generates Bode data using numerator and denominator polynomials.
    */
   const runBodeAnalysis = () => {
-    if (!numerator || !denominator || numerator.length === 0 || denominator.length === 0) {
+    if (
+      !numerator ||
+      !denominator ||
+      numerator.length === 0 ||
+      denominator.length === 0
+    ) {
       alert("Please provide valid numerator and denominator polynomials.");
       return;
     }
@@ -42,7 +46,13 @@ export const BodePlot: React.FC<BodePlotProps> = ({
       setIsDrawing(true);
     }
 
-    const points = generateBodeData(numerator, denominator, wMin, wMax, pointsPerDecade);
+    const points = generateBodeData(
+      numerator,
+      denominator,
+      wMin,
+      wMax,
+      pointsPerDecade,
+    );
     setBodeData(points);
   };
 
@@ -101,7 +111,15 @@ export const BodePlot: React.FC<BodePlotProps> = ({
 
         {/* Plot Controls */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              fontSize: "13px",
+              cursor: "pointer",
+            }}
+          >
             <input
               type="checkbox"
               checked={isAnimated}
@@ -123,7 +141,11 @@ export const BodePlot: React.FC<BodePlotProps> = ({
               color: "var(--sky-blue)",
             }}
           >
-            {isDrawing ? <RefreshCw size={12} className="spin" /> : <Play size={12} fill="currentColor" />}
+            {isDrawing ? (
+              <RefreshCw size={12} className="spin" />
+            ) : (
+              <Play size={12} fill="currentColor" />
+            )}
             Draw Bode
           </button>
         </div>

@@ -1,7 +1,7 @@
 import type { Poly } from "./systemSolver";
 
 /**
- * Represents a single point in a Bode plot, 
+ * Represents a single point in a Bode plot,
  * including frequency, magnitude, and phase information.
  */
 export interface BodePoint {
@@ -52,10 +52,13 @@ function evalPolyComplexDescending(poly: number[], omega: number): Complex {
     const wPow = Math.pow(omega, p);
     const mod = p % 4;
 
-    if (mod === 0) re += coeff * wPow;       // (j*w)^0 = +1
-    else if (mod === 1) im += coeff * wPow;  // (j*w)^1 = +j
-    else if (mod === 2) re -= coeff * wPow;  // (j*w)^2 = -1
-    else if (mod === 3) im -= coeff * wPow;  // (j*w)^3 = -j
+    if (mod === 0)
+      re += coeff * wPow; // (j*w)^0 = +1
+    else if (mod === 1)
+      im += coeff * wPow; // (j*w)^1 = +j
+    else if (mod === 2)
+      re -= coeff * wPow; // (j*w)^2 = -1
+    else if (mod === 3) im -= coeff * wPow; // (j*w)^3 = -j
   }
 
   return { re, im };
@@ -88,7 +91,7 @@ export function calculateArg(num: Poly, den: Poly, omega: number): number {
 
 /**
  * Generates Bode plot data points across a logarithmic frequency sweep.
- * @param num             | Numerator polynomial coefficients [c0, c1, ...] 
+ * @param num             | Numerator polynomial coefficients [c0, c1, ...]
  * @param den             | Denominator polynomial coefficients [d0, d1, ...]
  * @param wMin            | Log start frequency (e.g., 0.01 rad/s)
  * @param wMax            | Log end frequency (e.g., 1000 rad/s)
@@ -153,7 +156,7 @@ export function generateBodeData(
 export function drawBodePlot(
   canvas: HTMLCanvasElement,
   data: BodePoint[],
-  options: BodeDrawOptions = {}
+  options: BodeDrawOptions = {},
 ): void {
   if (data.length === 0) return;
 
@@ -197,8 +200,10 @@ export function drawBodePlot(
   const logWMax = Math.log10(data[data.length - 1].frequency);
 
   // Auto-scale Y-axis limits
-  let minMag = Infinity, maxMag = -Infinity;
-  let minPhase = Infinity, maxPhase = -Infinity;
+  let minMag = Infinity,
+    maxMag = -Infinity;
+  let minPhase = Infinity,
+    maxPhase = -Infinity;
 
   for (const pt of data) {
     if (pt.magnitudeDb < minMag) minMag = pt.magnitudeDb;
@@ -239,7 +244,8 @@ export function drawBodePlot(
 
     for (let sub = 2; sub <= 9; sub++) {
       const wSub = sub * Math.pow(10, dec);
-      if (wSub < data[0].frequency || wSub > data[data.length - 1].frequency) continue;
+      if (wSub < data[0].frequency || wSub > data[data.length - 1].frequency)
+        continue;
       const xSub = mapX(wSub);
 
       ctx.beginPath();
@@ -252,7 +258,10 @@ export function drawBodePlot(
 
     // Major decade grid
     const wMajor = Math.pow(10, dec);
-    if (wMajor >= data[0].frequency && wMajor <= data[data.length - 1].frequency) {
+    if (
+      wMajor >= data[0].frequency &&
+      wMajor <= data[data.length - 1].frequency
+    ) {
       const xMajor = mapX(wMajor);
       ctx.strokeStyle = gridColor;
       ctx.setLineDash([]);
@@ -357,8 +366,21 @@ export function drawBodePlot(
  */
 function toSuperscript(num: number): string {
   const superscripts: Record<string, string> = {
-    "-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³",
-    "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹"
+    "-": "⁻",
+    "0": "⁰",
+    "1": "¹",
+    "2": "²",
+    "3": "³",
+    "4": "⁴",
+    "5": "⁵",
+    "6": "⁶",
+    "7": "⁷",
+    "8": "⁸",
+    "9": "⁹",
   };
-  return num.toString().split("").map((c) => superscripts[c] || c).join("");
+  return num
+    .toString()
+    .split("")
+    .map((c) => superscripts[c] || c)
+    .join("");
 }
