@@ -1,75 +1,59 @@
-# React + TypeScript + Vite
+# ⚡ Cyax — Interactive Systems Theory & Control Design Simulator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Cyax** is a web and desktop educational simulator designed to help engineering students and control system practitioners visualize, analyze, and simulate dynamic systems in real time. 
 
-Currently, two official plugins are available:
+It automatically converts interactive block diagrams into symbolic transfer functions $H(s)$ and linear state-space representations, rendering frequency responses (Bode plots) directly in the browser.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## 🚀 Key Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* **Interactive Block Diagram Editor:** Visually place, connect, and configure feedback loops, summing junctions, and transfer function blocks using XYFlow.
+* **Symbolic Solver Engine:** Automatically derives closed-loop transfer functions $H(s)$ and linear state-space representations ($A, B, C, D$) via rational Gaussian elimination.
+* **LaTeX Math Rendering:** Formats derived transfer functions in mathematical notation powered by KaTeX.
+* **Canvas-Based Bode Plots:** Computes real-time magnitude and phase frequency responses with an animated sweep mode.
+* **Controlled Execution Workflow:** Explicit execution triggers to evaluate complex system configurations on demand.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🛣️ Project Roadmap & Path Goals
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+> **Note:** Cyax is an active project under ongoing development. Below are the planned milestones and features currently in progress:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- [x] **Core System Solver:** Automated derivation of $H(s)$ and state-space matrices from node graphs.
+- [x] **Bode Plot Rendering Engine:** HTML5 Canvas frequency response visualizer with magnitude (dB) and phase (deg) curves.
+- [ ] **Differntial/Difference equations:** The ability to find and/or input a diff equation to the system for the further calculations.
+- [ ] **Discrete and Continous Analyzing:** Being able to analyse both discrete and continous systems. (For now only the Continous part is implemented)
+- [ ] **Controle Design Rendering:** Being able to add/find the suitable Controler/compensator such as PI,PD,Lead etc. and analyzing them. 
+- [ ] **Time-Domain Simulation Engine:** Interactive step-response and impulse-response plots with configurable damping ratios ($\zeta$) and natural frequencies ($\omega_n$).
+- [ ] **Diagram Export & Import:** Save/load system graphs as JSON (Or other types) configurations and export high-resolution vector/LaTeX schematics.
+- [ ] **Discretization and sampeling:** Possiblity to descreticize a system and also applying the DTFT and this types of sampeling techs.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+---
 
-```
+## 🛠️ Tech Stack
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+* **Frontend Framework:** [React 18](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
+* **Build Tool:** [Vite](https://vitejs.dev/)
+* **Node Graph Editor:** [XYFlow (React Flow)](https://reactflow.dev/)
+* **Math Engine:** [KaTeX](https://katex.org/)
+* **Iconography:** [Lucide React](https://lucide.dev/)
+* **Styling:** Custom Modular CSS / CSS Modules
+* **Unit Testing:** [Vitest](https://vitest.dev/)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 📂 Project Structure
 
-```
+```text
+cyax/
+├── Docs/                  # Project documentation & reference material
+├── src/
+│   ├── assets/            # Static media and brand assets
+│   ├── components/        # UI components (common elements, canvas, controls, Bode plot)
+│   ├── test/              # Unit test suites & Vitest specs
+│   ├── utils/             # Core mathematical algorithms & system analysis solvers
+│   ├── App.tsx            # Main application workspace layout
+│   └── main.tsx           # React mounting entry point
+├── package.json           # Dependencies & build scripts
+└── vite.config.ts         # Vite bundler & path configurations
