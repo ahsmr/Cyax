@@ -3,6 +3,11 @@ import type { Poly } from "./systemSolver";
 /**
  * Represents a single point in a Bode plot,
  * including frequency, magnitude, and phase information.
+ * 
+ * frequency: Frequency in radians per second (rad/s).
+ * frequencyHz: Frequency in Hertz (Hz), calculated as frequency / (2 * π).
+ * magnitudeDb: Magnitude in decibels (dB).
+ * phaseDeg: Phase angle in degrees (°).
  */
 export interface BodePoint {
   frequency: number; // rad/s
@@ -13,6 +18,14 @@ export interface BodePoint {
 
 /**
  * Options for customizing the appearance of the Bode plot when drawn on a canvas.
+ * 
+ * title: Optional title for the Bode plot.
+ * strokeColorMag: Color for the magnitude plot line (default: "#1e40af").
+ * strokeColorPhase: Color for the phase plot line (default: "#1e40af").
+ * gridColor: Color for the major grid lines (default: "#d1d5db").
+ * subGridColor: Color for the minor grid lines (default: "#f3f4f6").
+ * textColor: Color for text labels and titles (default: "#374151").
+ * font: Font style for text labels and titles (default: "12px sans-serif").
  */
 export interface BodeDrawOptions {
   title?: string;
@@ -26,6 +39,9 @@ export interface BodeDrawOptions {
 
 /**
  * Represents a complex number with real and imaginary parts.
+ * 
+ * re: Real part of the complex number.
+ * im: Imaginary part of the complex number.
  */
 interface Complex {
   re: number;
@@ -68,12 +84,10 @@ export function calculateAmp(num: Poly, den: Poly, omega: number): number {
   const N = evalPolyComplexDescending(num, omega);
   const D = evalPolyComplexDescending(den, omega);
 
-  const numMagSq = N.re * N.re + N.im * N.im;
-  const denMagSq = D.re * D.re + D.im * D.im;
+  const numMagSq = Math.max(N.re * N.re + N.im * N.im, 1e-15);
+  const denMagSq = Math.max(D.re * D.re + D.im * D.im, 1e-15);
 
-  if (denMagSq < 1e-12) return -200;
-
-  const logN = numMagSq > 1e-12 ? 10 * Math.log10(numMagSq) : -200;
+  const logN = 10 * Math.log10(numMagSq);
   const logD = 10 * Math.log10(denMagSq);
 
   return logN - logD;
@@ -284,9 +298,25 @@ export function drawBodePlot(
   // Magnitude Y-Grid
   ctx.textAlign = "right";
   ctx.textBaseline = "middle";
-  const magStep = 10;
-  for (let m = minMag; m <= maxMag; m += magStep) {
+  // Dynamically calculate magnitude step size to prevent label overlap
+  const magRange = maxMag - minMag;
+  const rawStep = magRange / 6;
+
+  const magStep =
+    rawStep > 40 ? 50 :
+    rawStep > 20 ? 25 :
+    rawStep > 10 ? 10 :
+    rawStep > 5  ? 5  : 2;
+
+  const alignedMinMag = Math.floor(minMag / magStep) * magStep;
+  const alignedMaxMag = Math.ceil(maxMag / magStep) * magStep;
+
+  for (let m = alignedMinMag; m <= alignedMaxMag; m += magStep) {
     const y = mapYMag(m);
+
+    // Skip drawing if point falls outside subplot bounds
+    if (y < yMagTop - 1 || y > yMagBottom + 1) continue;
+
     ctx.strokeStyle = gridColor;
     ctx.beginPath();
     ctx.moveTo(marginLeft, y);
@@ -298,9 +328,24 @@ export function drawBodePlot(
   }
 
   // Phase Y-Grid
-  const phaseStep = 30;
-  for (let p = minPhase; p <= maxPhase; p += phaseStep) {
+  // Dynamically calculate phase step size
+  const phaseRange = maxPhase - minPhase;
+  const rawPhaseStep = phaseRange / 6;
+
+  const phaseStep =
+    rawPhaseStep > 180 ? 360 :
+    rawPhaseStep > 90  ? 180 :
+    rawPhaseStep > 45  ? 90  :
+    rawPhaseStep > 15  ? 45  : 30;
+
+  const alignedMinPhase = Math.floor(minPhase / phaseStep) * phaseStep;
+  const alignedMaxPhase = Math.ceil(maxPhase / phaseStep) * phaseStep;
+
+  for (let p = alignedMinPhase; p <= alignedMaxPhase; p += phaseStep) {
     const y = mapYPhase(p);
+
+    if (y < yPhaseTop - 1 || y > yPhaseBottom + 1) continue;
+
     ctx.strokeStyle = gridColor;
     ctx.beginPath();
     ctx.moveTo(marginLeft, y);
