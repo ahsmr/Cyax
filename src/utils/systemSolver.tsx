@@ -4,7 +4,23 @@ import type { Node, Edge } from "@xyflow/react";
 // 1. TYPE DEFINITIONS & INTERFACES
 // ==========================================
 
+/**
+ * Represents the result of the transfer function derivation process.
+ *
+ * numerator: Coefficients of the numerator polynomial (null if unsolvable)
+ *
+ * denominator: Coefficients of the denominator polynomial (null if unsolvable)
+ *
+ * latexEquation: The formatted final LaTeX equation H(s)
+ *
+ * stepByStep: Step-by-step state-space derivation details
+ *
+ * error?: Optional error details on calculation failure
+ *
+ */
 export interface SolverResult {
+  numerator: number[] | null; // Coefficients of the numerator polynomial (null if unsolvable)
+  denominator: number[] | null; // Coefficients of the denominator polynomial (null if unsolvable)
   latexEquation: string; // The formatted final LaTeX equation H(s)
   stepByStep: string[]; // Step-by-step state-space derivation details
   error?: string; // Optional error details on calculation failure
@@ -14,8 +30,12 @@ export interface SolverResult {
  * Polynomial in s, indexed by power.
  * [c0, c1, c2] => c0 + c1*s + c2*s^2
  */
-type Poly = number[];
+export type Poly = number[];
 
+/**
+ * Rational function represented
+ * by numerator and denominator polynomials.
+ */
 interface Rational {
   num: Poly;
   den: Poly;
@@ -38,7 +58,7 @@ const EPSILON = 1e-7;
  * @example cleanPoly([0, 0, 0]) => [0]
  * @example cleanPoly([1e-8, 2, 3]) => [0, 2, 3]
  */
-function cleanPoly(p: Poly): Poly {
+export function cleanPoly(p: Poly): Poly {
   const cleaned = p.map((c) => (Math.abs(c) < EPSILON ? 0 : c));
   let len = cleaned.length;
   while (len > 0 && Math.abs(cleaned[len - 1]) < EPSILON) len--;
@@ -176,13 +196,9 @@ function polyGcd(a: Poly, b: Poly): Poly {
  * Simplifies a rational function represented by numerator and denominator polynomials.
  * @param num | The numerator polynomial.
  * @param den | The denominator polynomial.
- * @returns | The simplified rational function with
- *          | the numerator and denominator polynomials reduced by their GCD.
- * 
- * Here are accurate @example JSDoc comments for simplifyRational:
-
-TypeScript
-/**
+ * @returns   | The simplified rational function with
+ *            | the numerator and denominator polynomials reduced by their GCD.
+ *
  * Rational Simplification Engine:
  * Cancels common polynomial factors (GCD), cancels trailing powers of 's',
  * and normalizes leading coefficients of denominator polynomials.
@@ -291,7 +307,7 @@ function matrixToLaTeX(matrix: number[][]): string {
 /**
  * Computes the determinant of a matrix of polynomials.
  * @param matrix | The matrix of polynomials.
- * @returns | The determinant polynomial of the matrix.
+ * @returns      | The determinant polynomial of the matrix.
  */
 function polyDeterminant(matrix: Poly[][]): Poly {
   const n = matrix.length;
@@ -323,7 +339,7 @@ function polyDeterminant(matrix: Poly[][]): Poly {
 /**
  * Computes the adjugate of a matrix of polynomials.
  * @param matrix | The matrix of polynomials.
- * @returns | The adjugate matrix as a matrix of polynomials.
+ * @returns      | The adjugate matrix as a matrix of polynomials.
  */
 function polyAdjugate(matrix: Poly[][]): Poly[][] {
   const n = matrix.length;
@@ -361,7 +377,7 @@ function polyAdjugate(matrix: Poly[][]): Poly[][] {
  * by constructing continuous-time state-space matrices A, B, C, D directly from the diagram.
  * @param nodes | The array of nodes representing the system diagram.
  * @param edges | The array of edges representing the connections between nodes.
- * @returns | The SolverResult containing the LaTeX equation and step-by-step derivation.
+ * @returns     | The SolverResult containing the LaTeX equation and step-by-step derivation.
  *
  * @example
  * // Given a system with nodes and edges representing a state-space system,
@@ -382,6 +398,8 @@ export function deriveTransferFunction(
 
     if (!inputNode || !outputNode) {
       return {
+        denominator: null,
+        numerator: null,
         latexEquation: "H(s) = \\text{Invalid Topology}",
         stepByStep: ["Missing input u(t) or output y(t) block."],
       };
@@ -607,11 +625,15 @@ export function deriveTransferFunction(
     );
 
     return {
+      numerator: finalNum,
+      denominator: finalDen,
       latexEquation: `H(s) = ${finalLaTeX}`,
       stepByStep,
     };
   } catch (err: unknown) {
     return {
+      numerator: null,
+      denominator: null,
       latexEquation: "H(s) = \\text{Invalid Topology}",
       stepByStep: ["Continuous State-Space matrix solving failed."],
       error: err instanceof Error ? err.message : String(err),
