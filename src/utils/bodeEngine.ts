@@ -1,5 +1,5 @@
 import type { Poly } from "./systemSolver";
-
+import { cleanPoly } from "./systemSolver";
 /**
  * Represents a single point in a Bode plot,
  * including frequency, magnitude, and phase information.
@@ -55,12 +55,15 @@ interface Complex {
  * @returns     | Complex number representing P(j*omega)
  */
 function evalPolyComplexDescending(poly: number[], omega: number): Complex {
+
+  const poly_clean  = cleanPoly(poly); // Making sure to clean the polynomial coefficients 
+                                       // to remove near-zero values and trailing zeros.
   let re = 0;
   let im = 0;
-  const n = poly.length - 1;
+  const n = poly_clean.length - 1;
 
   for (let i = 0; i <= n; i++) {
-    const coeff = poly[i];
+    const coeff = poly_clean[i];
     if (coeff === 0) continue;
 
     // Power of s is (n - i)

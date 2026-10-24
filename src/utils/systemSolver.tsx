@@ -58,7 +58,7 @@ const EPSILON = 1e-7;
  * @example cleanPoly([0, 0, 0]) => [0]
  * @example cleanPoly([1e-8, 2, 3]) => [0, 2, 3]
  */
-function cleanPoly(p: Poly): Poly {
+export function cleanPoly(p: Poly): Poly {
   const cleaned = p.map((c) => (Math.abs(c) < EPSILON ? 0 : c));
   let len = cleaned.length;
   while (len > 0 && Math.abs(cleaned[len - 1]) < EPSILON) len--;
