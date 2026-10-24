@@ -4,10 +4,10 @@ import type { Poly } from "./systemSolver";
  * Represents a single point in a Bode plot,
  * including frequency, magnitude, and phase information.
  *
- * frequency: Frequency in radians per second (rad/s).
- * frequencyHz: Frequency in Hertz (Hz), calculated as frequency / (2 * π).
- * magnitudeDb: Magnitude in decibels (dB).
- * phaseDeg: Phase angle in degrees (°).
+ * @property frequency   | Frequency in radians per second (rad/s).
+ * @property frequencyHz | Frequency in Hertz (Hz), calculated as frequency / (2 * π).
+ * @property magnitudeDb | Magnitude in decibels (dB).
+ * @property phaseDeg    | Phase angle in degrees (°).
  */
 export interface BodePoint {
   frequency: number; // rad/s
@@ -19,13 +19,13 @@ export interface BodePoint {
 /**
  * Options for customizing the appearance of the Bode plot when drawn on a canvas.
  *
- * title: Optional title for the Bode plot.
- * strokeColorMag: Color for the magnitude plot line (default: "#1e40af").
- * strokeColorPhase: Color for the phase plot line (default: "#1e40af").
- * gridColor: Color for the major grid lines (default: "#d1d5db").
- * subGridColor: Color for the minor grid lines (default: "#f3f4f6").
- * textColor: Color for text labels and titles (default: "#374151").
- * font: Font style for text labels and titles (default: "12px sans-serif").
+ * @property title            | Optional title for the Bode plot.
+ * @property strokeColorMag   | Color for the magnitude plot line (default: "#1e40af").
+ * @property strokeColorPhase | Color for the phase plot line (default: "#1e40af").
+ * @property gridColor        | Color for the major grid lines (default: "#d1d5db").
+ * @property subGridColor     | Color for the minor grid lines (default: "#f3f4f6").
+ * @property textColor        | Color for text labels and titles (default: "#374151").
+ * @property font             | Font style for text labels and titles (default: "12px sans-serif").
  */
 export interface BodeDrawOptions {
   title?: string;
@@ -40,8 +40,8 @@ export interface BodeDrawOptions {
 /**
  * Represents a complex number with real and imaginary parts.
  *
- * re: Real part of the complex number.
- * im: Imaginary part of the complex number.
+ * @property re | Real part of the complex number.
+ * @property im | Imaginary part of the complex number.
  */
 interface Complex {
   re: number;

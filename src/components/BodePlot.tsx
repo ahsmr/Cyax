@@ -4,19 +4,36 @@ import { generateBodeData, drawBodePlot } from "../utils/bodeEngine";
 import type { BodePoint } from "../utils/bodeEngine";
 import type { Poly } from "../utils/systemSolver";
 
+/**
+ * BodePlotProps
+ * Defines the props interface for the BodePlot component.
+ * @property numerator      | The numerator polynomial coefficients of the transfer function.  
+ * @property denominator    | The denominator polynomial coefficients of the transfer function.
+ * @property title          | Optional title for the Bode plot, can be a string or React node.
+ * @property wMin           | Minimum frequency (rad/s) for the Bode plot (default: 0.01).
+ * @property wMax           | Maximum frequency (rad/s) for the Bode plot (default: 1000).
+ * @property pointsPerDecade| Number of points per decade for frequency sweep (default: 50).
+ */
 export interface BodePlotProps {
   numerator: Poly | null;
   denominator: Poly | null;
-  title?: string;
+  title?: React.ReactNode; // Updated from string to React.ReactNode
   wMin?: number;
   wMax?: number;
   pointsPerDecade?: number;
 }
 
+/**
+ *  BodePlot Component
+ *  Renders a Bode plot for a given transfer function defined by its numerator and denominator polynomials.
+ *  Supports optional animation of the frequency sweep and customizable plot title.
+ * @param param0 | BodePlotProps - Component properties including transfer function coefficients and plot configuration.
+ * @returns      | JSX.Element - The rendered Bode plot component with controls for animation and drawing.
+ */
 export const BodePlot: React.FC<BodePlotProps> = ({
   numerator,
   denominator,
-  title = "Bode-diagram",
+  title = "Frequency Response (Bode Plot)",
   wMin = 0.01,
   wMax = 1000,
   pointsPerDecade = 50,
@@ -28,9 +45,6 @@ export const BodePlot: React.FC<BodePlotProps> = ({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationRef = useRef<number | null>(null);
 
-  /**
-   * Generates Bode data using numerator and denominator polynomials.
-   */
   const runBodeAnalysis = () => {
     if (
       !numerator ||
@@ -63,8 +77,11 @@ export const BodePlot: React.FC<BodePlotProps> = ({
       cancelAnimationFrame(animationRef.current);
     }
 
+    // Canvas drawing function receives empty/default string title if title is a React Node
+    const canvasTitle = typeof title === "string" ? title : "";
+
     if (!isAnimated) {
-      drawBodePlot(canvasRef.current, bodeData, { title });
+      drawBodePlot(canvasRef.current, bodeData, { title: canvasTitle });
       requestAnimationFrame(() => setIsDrawing(false));
     } else {
       let currentFrame = 1;
@@ -74,7 +91,7 @@ export const BodePlot: React.FC<BodePlotProps> = ({
         if (!canvasRef.current) return;
 
         const subset = bodeData.slice(0, currentFrame);
-        drawBodePlot(canvasRef.current, subset, { title });
+        drawBodePlot(canvasRef.current, subset, { title: canvasTitle });
 
         if (currentFrame < totalFrames) {
           currentFrame++;
@@ -104,9 +121,15 @@ export const BodePlot: React.FC<BodePlotProps> = ({
       >
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <BarChart2 size={18} style={{ color: "var(--sky-blue)" }} />
-          <span className="section-label" style={{ margin: 0 }}>
-            Frequency Response (Bode Plot)
-          </span>
+          <div
+            className="section-label"
+            style={{
+              margin: 0,
+              color: "var(--sky-blue)", // Or "#ffffff" for crisp white math text
+            }}
+          >
+            {title}
+          </div>
         </div>
 
         {/* Plot Controls */}

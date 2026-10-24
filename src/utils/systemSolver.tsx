@@ -6,17 +6,11 @@ import type { Node, Edge } from "@xyflow/react";
 
 /**
  * Represents the result of the transfer function derivation process.
- *
- * numerator: Coefficients of the numerator polynomial (null if unsolvable)
- *
- * denominator: Coefficients of the denominator polynomial (null if unsolvable)
- *
- * latexEquation: The formatted final LaTeX equation H(s)
- *
- * stepByStep: Step-by-step state-space derivation details
- *
- * error?: Optional error details on calculation failure
- *
+ * @property numerator     | Coefficients of the numerator polynomial (null if unsolvable)
+ * @property denominator   | Coefficients of the denominator polynomial (null if unsolvable)
+ * @property latexEquation | The formatted final LaTeX equation H(s)
+ * @property stepByStep    | Step-by-step state-space derivation details
+ * @property error?        | Optional error details on calculation failure
  */
 export interface SolverResult {
   numerator: number[] | null; // Coefficients of the numerator polynomial (null if unsolvable)
@@ -35,6 +29,8 @@ export type Poly = number[];
 /**
  * Rational function represented
  * by numerator and denominator polynomials.
+ * @property num | The numerator polynomial coefficients.
+ * @property den | The denominator polynomial coefficients.
  */
 interface Rational {
   num: Poly;

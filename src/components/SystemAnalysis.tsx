@@ -413,6 +413,7 @@ const SystemAnalysis: React.FC = () => {
 
           {/* Card 3: Reusable Standalone Bode Plot Component */}
           <BodePlot
+            title={<MathView math={solverOutput.latexEquation} />}
             numerator={solverOutput.numerator}
             denominator={solverOutput.denominator}
           />
