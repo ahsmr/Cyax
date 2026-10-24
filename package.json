@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "bench": "vitest bench --run"
+    "bench": "vitest bench --run",
+    "prettify": "npx prettier --write src/**/*.ts src/**/*.tsx"
   },
   "dependencies": {
     "@xyflow/react": "^12.11.6",

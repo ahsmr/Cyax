@@ -55,9 +55,8 @@ interface Complex {
  * @returns     | Complex number representing P(j*omega)
  */
 function evalPolyComplexDescending(poly: number[], omega: number): Complex {
-
-  const poly_clean  = cleanPoly(poly); // Making sure to clean the polynomial coefficients 
-                                       // to remove near-zero values and trailing zeros.
+  const poly_clean = cleanPoly(poly); // Making sure to clean the polynomial coefficients
+  // to remove near-zero values and trailing zeros.
   let re = 0;
   let im = 0;
   const n = poly_clean.length - 1;

@@ -6,7 +6,7 @@ import {
   drawBodePlot,
   type BodeDrawOptions,
 } from "../utils/bodeEngine";
-import type {Poly } from "../utils/systemSolver";
+import type { Poly } from "../utils/systemSolver";
 
 describe("bodeEngine", () => {
   /**
@@ -84,7 +84,7 @@ describe("bodeEngine", () => {
       const num: Poly = [1];
       const den: Poly = [1, 1];
       const wMin = 0.01; // 10^-2
-      const wMax = 100;  // 10^2 -> 4 decades total
+      const wMax = 100; // 10^2 -> 4 decades total
       const pointsPerDecade = 50;
 
       const data = generateBodeData(num, den, wMin, wMax, pointsPerDecade);
