@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  // Ensure relative path resolution for Electron's local file:// protocol
+  base: './',
   test: {
     globals: true,
     environment: 'jsdom',
