@@ -1,8 +1,8 @@
 import type { Node, Edge } from "@xyflow/react";
 
 /**
- * @todo [X] | 1) Diff equation has to be implemented 
- * @todo [ ] | 2) Impulse reponse has to be implemented 
+ * @todo [X] | 1) Diff equation has to be implemented
+ * @todo [ ] | 2) Impulse reponse has to be implemented
  * @todo [ ] | 3) Step response has to be implemented
  * @todo [ ] | 4) minimality and overservabiltiy and readabilty and internally/BIBO stability has to be implemented
  * @todo [ ] | 5) Add support for discrete-time systems (z-domain)
@@ -644,8 +644,8 @@ export function deriveTransferFunction(
         if (Math.abs(coef) < EPSILON) continue;
 
         const absCoef = Math.abs(coef);
-        let coefStr : string;
-        
+        let coefStr: string;
+
         // Handle coefficient string representation
         if (i === degree) {
           coefStr = coef < 0 ? "-" : "";
@@ -656,7 +656,7 @@ export function deriveTransferFunction(
         }
 
         // Handle derivative operator string
-        let diffStr : string;
+        let diffStr: string;
         if (i === 0) {
           diffStr = `${varName}(t)`;
         } else if (i === 1) {
@@ -677,7 +677,7 @@ export function deriveTransferFunction(
     stepByStep.push(
       `\\text{Step 4: Differential Equation Form}\\\\[0.25em]` +
         `\\text{From } N(s)U(s) = D(s)Y(s) \\text{ in time-domain:}\\\\[1em]` +
-        `${lhsDiff} = ${rhsDiff}`
+        `${lhsDiff} = ${rhsDiff}`,
     );
 
     return {
