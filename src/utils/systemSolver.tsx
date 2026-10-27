@@ -11,6 +11,7 @@ import { evalPolyComplexATS } from "./laplaceEngine";
  * @todo [ ] | 8) Add steady state response/error and transient response analysis (Low priority)
  * @todo [ ] | 9) Add support for compensators and controllers (PID, Lead, Lag, etc.) (Low priority)
  * @todo [ ] | 10) Add support for simplifying so that it actually simplfies the transfer function (Low priority)
+ * @todo [X] | 11) Add support for the factorization of polynomials into irreducible factors 
  */
 
 // ==========================================
