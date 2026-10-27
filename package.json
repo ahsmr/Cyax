@@ -5,7 +5,7 @@
   "type": "module",
   "main": "electron/main.js",
   "author": "ahsmr",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
