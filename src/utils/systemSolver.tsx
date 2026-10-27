@@ -1,18 +1,17 @@
 import type { Node, Edge } from "@xyflow/react";
 
-
 /**
- * @todo | 1) Diff equation has to be implemented
- * @todo | 2) Impulse reponse has to be implemented
- * @todo | 3) Step response has to be implemented
- * @todo | 4) minimality and overservabiltiy and readabilty and internally/BIBO stability has to be implemented
- * @todo | 5) Add support for discrete-time systems (z-domain)
- * @todo | 6) Add support for MIMO systems (multiple inputs and outputs) (Low priority)
- * @todo | 7) Add Nyquist diagram too 
- * @todo | 8) Add steady state response/error and transient response analysis (Low priority)
- * @todo | 9) Add support for compensators and controllers (PID, Lead, Lag, etc.) (Low priority)
+ * @todo [X] | 1) Diff equation has to be implemented 
+ * @todo [ ] | 2) Impulse reponse has to be implemented 
+ * @todo [ ] | 3) Step response has to be implemented
+ * @todo [ ] | 4) minimality and overservabiltiy and readabilty and internally/BIBO stability has to be implemented
+ * @todo [ ] | 5) Add support for discrete-time systems (z-domain)
+ * @todo [ ] | 6) Add support for MIMO systems (multiple inputs and outputs) (Low priority)
+ * @todo [ ] | 7) Add Nyquist diagram too
+ * @todo [ ] | 8) Add steady state response/error and transient response analysis (Low priority)
+ * @todo [ ] | 9) Add support for compensators and controllers (PID, Lead, Lag, etc.) (Low priority)
+ * @todo [ ] | 10) Add support for simplifying so that it actually simplfies the transfer function (Low priority)
  */
-
 
 // ==========================================
 // 1. TYPE DEFINITIONS & INTERFACES
@@ -27,8 +26,8 @@ import type { Node, Edge } from "@xyflow/react";
  * @property error?        | Optional error details on calculation failure
  */
 export interface SolverResult {
-  numerator: number[] | null; // Coefficients of the numerator polynomial (null if unsolvable)
-  denominator: number[] | null; // Coefficients of the denominator polynomial (null if unsolvable)
+  numerator: Poly | null; // Coefficients of the numerator polynomial (null if unsolvable)
+  denominator: Poly | null; // Coefficients of the denominator polynomial (null if unsolvable)
   latexEquation: string; // The formatted final LaTeX equation H(s)
   stepByStep: string[]; // Step-by-step state-space derivation details
   error?: string; // Optional error details on calculation failure
@@ -549,8 +548,8 @@ export function deriveTransferFunction(
 
     // Step 1: Formulate with numerical state-space system equations
     stepByStep.push(
-      `\\text{Step 1: Formulate Continuous-Time State-Space Representation}\\\\` +
-        `\\dot{\\mathbf{x}}(t) = ${latexA}\\mathbf{x}(t) + ${latexB}u(t)\\\\` +
+      `\\text{Step 1: Formulate Continuous-Time State-Space Representation}\\\\[0.5em]` +
+        `\\dot{\\mathbf{x}}(t) = ${latexA}\\mathbf{x}(t) + ${latexB}u(t)\\\\[1em]` +
         `y(t) = ${latexC}\\mathbf{x}(t) + ${latexD}u(t)`,
     );
 
@@ -629,9 +628,56 @@ export function deriveTransferFunction(
     const finalLaTeX = denStr === "1" ? numStr : `\\frac{${numStr}}{${denStr}}`;
 
     stepByStep.push(
-      `\\text{Step 3: Unsimplified Expression vs. Simplified Transfer Function}\\\\` +
-        `\\text{Unsimplified: } H(s) = ${unsimplifiedLaTeX}\\\\` +
-        `\\text{Simplified: } H(s) = ${finalLaTeX}`,
+      `\\text{Step 3: Unsimplified Expression vs. Simplified Transfer Function}\\\\[0.5em]` +
+        `\\text{Unsimplified: } \\frac{N(s)}{D(s)} = H(s) = ${unsimplifiedLaTeX}\\\\[1em]` +
+        `\\text{Simplified: } \\frac{N(s)}{D(s)} = H(s) = ${finalLaTeX}`,
+    );
+
+    // Step 4: Convert Transfer Function to Differential Equation
+    // Helper to format polynomial coefficients into differential terms (e.g., d^k y / dt^k)
+    const polyToDiffOp = (poly: Poly, varName: string): string => {
+      const terms: string[] = [];
+      const degree = poly.length - 1;
+
+      for (let i = degree; i >= 0; i--) {
+        const coef = poly[i];
+        if (Math.abs(coef) < EPSILON) continue;
+
+        const absCoef = Math.abs(coef);
+        let coefStr : string;
+        
+        // Handle coefficient string representation
+        if (i === degree) {
+          coefStr = coef < 0 ? "-" : "";
+          if (absCoef !== 1 || i === 0) coefStr += Number(absCoef.toFixed(4));
+        } else {
+          coefStr = coef < 0 ? " - " : " + ";
+          if (absCoef !== 1 || i === 0) coefStr += Number(absCoef.toFixed(4));
+        }
+
+        // Handle derivative operator string
+        let diffStr : string;
+        if (i === 0) {
+          diffStr = `${varName}(t)`;
+        } else if (i === 1) {
+          diffStr = `\\frac{d${varName}(t)}{dt}`;
+        } else {
+          diffStr = `\\frac{d^{${i}}${varName}(t)}{dt^{${i}}}`;
+        }
+
+        terms.push(`${coefStr}${diffStr}`);
+      }
+
+      return terms.length > 0 ? terms.join("") : `0${varName}(t)`;
+    };
+
+    const lhsDiff = polyToDiffOp(finalDen, "y");
+    const rhsDiff = polyToDiffOp(finalNum, "u");
+
+    stepByStep.push(
+      `\\text{Step 4: Differential Equation Form}\\\\[0.25em]` +
+        `\\text{From } N(s)U(s) = D(s)Y(s) \\text{ in time-domain:}\\\\[1em]` +
+        `${lhsDiff} = ${rhsDiff}`
     );
 
     return {
