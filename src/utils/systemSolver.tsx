@@ -1,5 +1,5 @@
 import type { Node, Edge } from "@xyflow/react";
-
+import { evalPolyComplexATS } from "./laplaceEngine";
 /**
  * @todo [X] | 1) Diff equation has to be implemented
  * @todo [ ] | 2) Impulse reponse has to be implemented
@@ -48,6 +48,15 @@ export type Poly = number[];
 interface Rational {
   num: Poly;
   den: Poly;
+}
+
+/**
+ * @property re | Real part of the complex number  
+ * @property im | Imaginary part of the complex number
+ */
+interface Complex {
+  re: number;
+  im: number;
 }
 
 const EPSILON = 1e-7;
@@ -252,6 +261,165 @@ function simplifyRational(num: Poly, den: Poly): Rational {
   }
 
   return { num: cleanPoly(n), den: cleanPoly(d) };
+}
+
+function solveAllRoots(poly: Poly): Complex[] {
+  const cleanP = cleanPoly(poly);
+  const n = cleanP.length - 1;
+  if (n <= 0) return [];
+
+  const lead = cleanP[n];
+  const p = cleanP.map((c) => c / lead);
+
+  if (n === 1) {
+    return [{ re: -p[0], im: 0 }];
+  }
+
+  if (n === 2) {
+    const disc = p[1] * p[1] - 4 * p[0];
+    if (disc >= 0) {
+      return [
+        { re: (-p[1] + Math.sqrt(disc)) / 2, im: 0 },
+        { re: (-p[1] - Math.sqrt(disc)) / 2, im: 0 },
+      ];
+    } else {
+      const alpha = -p[1] / 2;
+      const beta = Math.sqrt(-disc) / 2;
+      return [
+        { re: alpha, im: beta },
+        { re: alpha, im: -beta },
+      ];
+    }
+  }
+
+  // Initial complex root estimates on the unit circle
+  const roots: Complex[] = [];
+  const radius = 0.4;
+  for (let i = 0; i < n; i++) {
+    const angle = (2 * Math.PI * i) / n + 0.1;
+    roots.push({
+      re: Math.pow(radius, i) * Math.cos(angle),
+      im: Math.pow(radius, i) * Math.sin(angle),
+    });
+  }
+
+  // Durand-Kerner iterative refinement
+  const maxIter = 100;
+  for (let iter = 0; iter < maxIter; iter++) {
+    let maxChange = 0;
+    for (let i = 0; i < n; i++) {
+      const pVal = evalPolyComplexATS(p, roots[i]);
+
+      let denom: Complex = { re: 1, im: 0 };
+      for (let j = 0; j < n; j++) {
+        if (i === j) continue;
+        const diffRe = roots[i].re - roots[j].re;
+        const diffIm = roots[i].im - roots[j].im;
+
+        const nextRe = denom.re * diffRe - denom.im * diffIm;
+        const nextIm = denom.re * diffIm + denom.im * diffRe;
+        denom = { re: nextRe, im: nextIm };
+      }
+
+      const denomMagSq = denom.re * denom.re + denom.im * denom.im;
+      if (denomMagSq < 1e-12) continue;
+
+      const dzRe = (pVal.re * denom.re + pVal.im * denom.im) / denomMagSq;
+      const dzIm = (pVal.im * denom.re - pVal.re * denom.im) / denomMagSq;
+
+      roots[i].re -= dzRe;
+      roots[i].im -= dzIm;
+
+      const change = Math.sqrt(dzRe * dzRe + dzIm * dzIm);
+      if (change > maxChange) maxChange = change;
+    }
+
+    if (maxChange < EPSILON) break;
+  }
+
+  return roots.map((r) => ({
+    re: Math.abs(r.re) < EPSILON ? 0 : r.re,
+    im: Math.abs(r.im) < EPSILON ? 0 : r.im,
+  }));
+}
+
+/**
+ * Factors any polynomial P(s) into its list of simplest irreducible
+ * real polynomial factors [c0, c1, (c2)].
+ *
+ * @param poly Coefficients array in ascending order [c0, c1, c2, ...]
+ * @returns Array of polynomial factor arrays Poly[] (number[][])
+ *
+ * @example
+ * // Factors (s^2 - 4) => [-4, 0, 1]
+ * factorPolynomial([-4, 0, 1]);
+ * // => [[-2, 1], [2, 1]]  representing (s - 2)(s + 2)
+ *
+ * @example
+ * // Factors (s^3 + 4s^2 + 10s + 7) => [7, 10, 4, 1]
+ * factorPolynomial([7, 10, 4, 1]);
+ * // => [[1, 1], [7, 3, 1]]  representing (s + 1)(s^2 + 3s + 7)
+ */
+export function factorPolynomial(poly: Poly): Poly[] {
+  const cleanP = cleanPoly(poly);
+  const n = cleanP.length - 1;
+
+  if (n <= 0) {
+    return [cleanP];
+  }
+
+  const leadingCoeff = cleanP[n];
+  const roots = solveAllRoots(cleanP);
+  const used = new Array(roots.length).fill(false);
+  const result: Poly[] = [];
+
+  for (let i = 0; i < roots.length; i++) {
+    if (used[i]) continue;
+
+    if (Math.abs(roots[i].im) < EPSILON) {
+      // Real linear factor: (s - r) => [-r, 1]
+      const r = Number(roots[i].re.toFixed(4));
+      result.push(cleanPoly([-r, 1]));
+      used[i] = true;
+    } else {
+      // Complex conjugate pair: alpha +/- j*beta => s^2 - 2*alpha*s + (alpha^2 + beta^2)
+      let pairIdx = -1;
+      for (let j = i + 1; j < roots.length; j++) {
+        if (
+          !used[j] &&
+          Math.abs(roots[i].re - roots[j].re) < 1e-3 &&
+          Math.abs(roots[i].im + roots[j].im) < 1e-3
+        ) {
+          pairIdx = j;
+          break;
+        }
+      }
+
+      if (pairIdx !== -1) {
+        const alpha = roots[i].re;
+        const beta = Math.abs(roots[i].im);
+
+        const a1 = Number((-2 * alpha).toFixed(4));
+        const a0 = Number((alpha * alpha + beta * beta).toFixed(4));
+
+        result.push(cleanPoly([a0, a1, 1]));
+
+        used[i] = true;
+        used[pairIdx] = true;
+      }
+    }
+  }
+
+  // Include leading coefficient if non-monic (a != 1)
+  if (leadingCoeff !== 1) {
+    if (result.length > 0) {
+      result[0] = result[0].map((c) => c * leadingCoeff);
+    } else {
+      result.push([leadingCoeff]);
+    }
+  }
+
+  return result;
 }
 
 // ==========================================
@@ -627,10 +795,34 @@ export function deriveTransferFunction(
     const denStr = polyToLaTeX(finalDen);
     const finalLaTeX = denStr === "1" ? numStr : `\\frac{${numStr}}{${denStr}}`;
 
+    // Apply factorPolynomial to factor the numerator and denominator into products of prime factors
+    const numFactors = factorPolynomial(finalNum);
+    const denFactors = factorPolynomial(finalDen);
+
+    const formatFactorList = (factors: Poly[]): string => {
+      if (factors.length === 0) return "0";
+      return factors
+        .map((f) => {
+          const str = polyToLaTeX(f);
+          return f.length > 2 || (f.length === 2 && f[0] !== 0)
+            ? `(${str})`
+            : str;
+        })
+        .join("");
+    };
+
+    const factoredNumStr = formatFactorList(numFactors);
+    const factoredDenStr = formatFactorList(denFactors);
+    const factoredLaTeX =
+      factoredDenStr === "1"
+        ? factoredNumStr
+        : `\\frac{${factoredNumStr}}{${factoredDenStr}}`;
+
     stepByStep.push(
-      `\\text{Step 3: Unsimplified Expression vs. Simplified Transfer Function}\\\\[0.5em]` +
+      `\\text{Step 3: Unsimplified, Simplified, and Factored Transfer Function}\\\\[0.5em]` +
         `\\text{Unsimplified: } \\frac{N(s)}{D(s)} = H(s) = ${unsimplifiedLaTeX}\\\\[1em]` +
-        `\\text{Simplified: } \\frac{N(s)}{D(s)} = H(s) = ${finalLaTeX}`,
+        `\\text{Simplified: } \\frac{N(s)}{D(s)} = H(s) = ${finalLaTeX}\\\\[1em]` +
+        `\\text{Factored: } \\frac{N(s)}{D(s)} = H(s) = ${factoredLaTeX}`,
     );
 
     // Step 4: Convert Transfer Function to Differential Equation

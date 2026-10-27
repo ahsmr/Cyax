@@ -1,6 +1,9 @@
 import { describe, it, expect } from "vitest";
 import type { Node, Edge } from "@xyflow/react";
-import { deriveTransferFunction } from "../utils/systemSolver";
+import {
+  deriveTransferFunction,
+  factorPolynomial,
+} from "../utils/systemSolver";
 
 const createNode = (id: string, type: string, data = {}): Node => ({
   id,
@@ -215,5 +218,50 @@ describe("deriveTransferFunction Engine", () => {
         "H(s) = \\frac{0.5s^{3} + 4s + 2}{s^{3} + s^{2} + 4s + 2}",
       );
     });
+  });
+});
+describe("factorPolynomial Engine", () => {
+  it("factors degree 1 linear polynomial s - 3", () => {
+    // P(s) = s - 3 => [-3, 1]
+    const factors = factorPolynomial([-3, 1]);
+    expect(factors).toEqual([[-3, 1]]);
+  });
+
+  it("factors difference of squares s^2 - 4 into (s - 2)(s + 2)", () => {
+    // P(s) = s^2 - 4 => [-4, 0, 1]
+    const factors = factorPolynomial([-4, 0, 1]);
+
+    expect(factors.length).toBe(2);
+    expect(factors).toContainEqual([-2, 1]);
+    expect(factors).toContainEqual([2, 1]);
+  });
+
+  it("factors cubic polynomial s^3 - 6s^2 + 11s - 6 into (s - 1)(s - 2)(s - 3)", () => {
+    // P(s) = (s - 1)(s - 2)(s - 3) = s^3 - 6s^2 + 11s - 6 => [-6, 11, -6, 1]
+    const factors = factorPolynomial([-6, 11, -6, 1]);
+
+    expect(factors.length).toBe(3);
+    expect(factors).toContainEqual([-1, 1]);
+    expect(factors).toContainEqual([-2, 1]);
+    expect(factors).toContainEqual([-3, 1]);
+  });
+
+  it("factors polynomial with complex conjugate roots into real irreducible quadratic (s + 1)(s^2 + 2s + 5)", () => {
+    // P(s) = (s + 1)(s^2 + 2s + 5) = s^3 + 3s^2 + 7s + 5 => [5, 7, 3, 1]
+    const factors = factorPolynomial([5, 7, 3, 1]);
+
+    expect(factors.length).toBe(2);
+    expect(factors).toContainEqual([1, 1]); // (s + 1)
+    expect(factors).toContainEqual([5, 2, 1]); // (s^2 + 2s + 5)
+  });
+
+  it("handles non-monic leading coefficients 2s^2 - 8 => 2(s - 2)(s + 2)", () => {
+    // P(s) = 2s^2 - 8 => [-8, 0, 2]
+    const factors = factorPolynomial([-8, 0, 2]);
+
+    expect(factors.length).toBe(2);
+    // Multiply leading coeff 2 into the first factor: 2*(s - 2) = 2s - 4 => [-4, 2]
+    expect(factors).toContainEqual([-4, 2]);
+    expect(factors).toContainEqual([2, 1]);
   });
 });

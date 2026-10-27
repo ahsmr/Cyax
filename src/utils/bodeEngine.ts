@@ -53,8 +53,11 @@ interface Complex {
  * @param poly  | Coefficients of the polynomial [c0, c1, c2, ...]
  * @param omega | Frequency in rad/s
  * @returns     | Complex number representing P(j*omega)
+ *
+ * @example | evalPolyComplex([1, 2, 3], 1) => { re: 6, im: 2 }
+ * @example | evalPolyComplex([1, 0, 1], 1) => { re: 0, im: 2 }
  */
-function evalPolyComplex(poly: number[], omega: number): Complex {
+function evalPolyComplex(poly: Poly, omega: number): Complex {
   let re = 0;
   let im = 0;
 
