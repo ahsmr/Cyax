@@ -11,7 +11,7 @@ import { evalPolyComplexATS } from "./laplaceEngine";
  * @todo [ ] | 8) Add steady state response/error and transient response analysis (Low priority)
  * @todo [ ] | 9) Add support for compensators and controllers (PID, Lead, Lag, etc.) (Low priority)
  * @todo [ ] | 10) Add support for simplifying so that it actually simplfies the transfer function (Low priority)
- * @todo [X] | 11) Add support for the factorization of polynomials into irreducible factors 
+ * @todo [X] | 11) Add support for the factorization of polynomials into irreducible factors
  */
 
 // ==========================================
@@ -700,13 +700,18 @@ export function deriveTransferFunction(
     });
 
     // Populate C and D from output node inputs (y)
+    // Populate C and D from output node inputs (y)
     const outEdges = edges.filter((e) => e.target === outputNode.id);
     outEdges.forEach((e) => {
+      // Determine if the incoming branch to the output carries a gain or sign inversion
+      const branchGain =
+        outputNode.type === "summing" && e.targetHandle === "in-minus" ? -1 : 1;
+
       const { coeffs_x, coeff_u } = resolveNodeSignal(e.source);
       for (let j = 0; j < numStates; j++) {
-        C_mat[0][j] += coeffs_x[j];
+        C_mat[0][j] += branchGain * coeffs_x[j];
       }
-      D_val += coeff_u;
+      D_val += branchGain * coeff_u;
     });
 
     // Format matrix string representations

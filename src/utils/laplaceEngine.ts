@@ -1,4 +1,5 @@
 import type { Poly } from "./systemSolver";
+import { cleanPoly } from "./systemSolver";
 
 /**
  * @property time    | time that the impulse response is evaluated (seconds)
@@ -106,20 +107,26 @@ function polyDerivative(poly: Poly): Poly {
   if (poly.length <= 1) return [0];
   const deriv: Poly = [];
   for (let i = 1; i < poly.length; i++) {
-    deriv.push(i * poly[i]);
+    deriv.push(i * poly[i]); // start from 1 since the derivative of a constant is 0
   }
-  return deriv;
+  const cleaned = cleanPoly(deriv); // remove leading zeros
+  return cleaned;
 }
 
 /**
- * Finds the poles of a transfer function represented by its denominator coefficients.
- * @param den | Coefficients of the denominator polynomial (from lowest degree to highest)
- * @returns | List of complex poles
+ * Finds the roots of a polynomial.
+ * @param poly | Coefficients of the polynomial (from lowest degree to highest)
+ * @returns | List of complex roots
  */
-function findPoles(den: Poly): Complex[] {
+function findRoots(poly: Poly): Complex[] {
   // Normalize lead coefficient
-  const lead = den[den.length - 1];
-  const p = den.map((c) => c / lead);
+  const cleanedDen = cleanPoly(poly); // to avoid devision by zero and ensure proper degree
+
+  if (cleanedDen.length === 0) {
+    throw new Error("Denominator polynomial cannot be zero.");
+  }
+  const lead = cleanedDen[cleanedDen.length - 1];
+  const p = cleanedDen.map((c) => c / lead);
   const degree = p.length - 1;
 
   if (degree === 1) {
@@ -128,10 +135,11 @@ function findPoles(den: Poly): Complex[] {
   }
 
   if (degree === 2) {
+    // Because in the beginnig we normalized the polynomial, we can use the quadratic formula directly
     // 2nd Order: s^2 + a1*s + a0 = 0
     const a1 = p[1];
     const a0 = p[0];
-    const disc = a1 * a1 - 4 * a0;
+    const disc = a1 * a1 - 4 * a0; // Discriminant
 
     if (disc >= 0) {
       return [
@@ -149,39 +157,57 @@ function findPoles(den: Poly): Complex[] {
   }
 
   if (degree === 3) {
-    // 3rd Order (Cardano's Method or Durand-Kerner numerical root finder)
-    // Durand-Kerner iterative algorithm for general roots
-    const roots: Complex[] = [
-      { re: 0.4, im: 0.9 },
-      { re: -0.8, im: -0.3 },
-      { re: 0.2, im: -0.6 },
-    ];
+    // Compute Cauchy's bound to dynamically scale initial guesses
+    const maxCoeff = Math.max(Math.abs(p[0]), Math.abs(p[1]), Math.abs(p[2]));
+    const radius = 1 + maxCoeff;
 
-    for (let iter = 0; iter < 100; iter++) {
-      for (let i = 0; i < 3; i++) {
-        const val = evalPolyComplexATS(p, roots[i]);
-        let denom: Complex = { re: 1, im: 0 };
-        for (let j = 0; j < 3; j++) {
-          if (i !== j) {
-            denom = cMul(denom, cSub(roots[i], roots[j]));
-          }
-        }
-        roots[i] = cSub(roots[i], cDiv(val, denom));
-      }
+    // Initialize roots evenly distributed on a circle of radius R (Aberth/Durand-Kerner initialization)
+    const n = 3;
+    let roots: Complex[] = [];
+    for (let k = 0; k < n; k++) {
+      const angle = (2 * Math.PI * k + 0.5) / n;
+      roots.push({
+        re: radius * Math.cos(angle),
+        im: radius * Math.sin(angle),
+      });
     }
 
-    // Clean small numerical noise
+    // Iterative refinement
+    for (let iter = 0; iter < 100; iter++) {
+      const nextRoots: Complex[] = [];
+
+      for (let i = 0; i < n; i++) {
+        const val = evalPolyComplexATS(p, roots[i]);
+
+        let denom: Complex = { re: 1, im: 0 };
+        for (let j = 0; j < n; j++) {
+          if (i !== j) {
+            const diff = cSub(roots[i], roots[j]);
+            denom = cMul(denom, diff);
+          }
+        }
+
+        const step = cDiv(val, denom);
+        nextRoots.push(cSub(roots[i], step));
+      }
+
+      roots = nextRoots; // Synchronous update (Jacobi style) to avoid intermediate state mutation
+    }
+
+    // Clean small numerical noise and return
     return roots.map((r) => ({
       re: Math.abs(r.re) < 1e-6 ? 0 : r.re,
       im: Math.abs(r.im) < 1e-6 ? 0 : r.im,
     }));
   }
-
   throw new Error(`Unsupported polynomial degree: ${degree}`);
 }
 
 /**
  * Calculates Inverse Laplace Transform h(t) = L^-1 { N(s) / D(s) }
+ * @param num | Coefficients of the numerator polynomial (from lowest degree to highest)
+ * @param den | Coefficients of the denominator polynomial (from lowest degree to highest)
+ * @returns | Object containing LaTeX equation and numerical evaluation function
  */
 export function inverseLaplace(num: Poly, den: Poly): InverseLaplaceResult {
   const dNum = num.length - 1;
@@ -202,7 +228,7 @@ export function inverseLaplace(num: Poly, den: Poly): InverseLaplaceResult {
     }
   }
 
-  const poles = findPoles(den);
+  const poles = findRoots(den);
   const denDeriv = polyDerivative(den);
 
   // Group poles into real poles and complex conjugate pairs
