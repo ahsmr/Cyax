@@ -3,6 +3,7 @@ import type { Node, Edge } from "@xyflow/react";
 import {
   deriveTransferFunction,
   factorPolynomial,
+  getMatrixRank,
 } from "../utils/systemSolver";
 
 const createNode = (id: string, type: string, data = {}): Node => ({
@@ -263,5 +264,110 @@ describe("factorPolynomial Engine", () => {
     // Multiply leading coeff 2 into the first factor: 2*(s - 2) = 2s - 4 => [-4, 2]
     expect(factors).toContainEqual([-4, 2]);
     expect(factors).toContainEqual([2, 1]);
+  });
+});
+
+describe("getMatrixRank", () => {
+  it("handles empty and zero matrices", () => {
+    expect(getMatrixRank([])).toBe(0);
+    expect(getMatrixRank([[]])).toBe(0);
+    expect(
+      getMatrixRank([
+        [0, 0, 0],
+        [0, 0, 0],
+      ]),
+    ).toBe(0);
+  });
+
+  it("calculates full rank square matrices", () => {
+    // 3x3 Identity Matrix -> Rank 3
+    const identity = [
+      [1, 0, 0],
+      [0, 1, 0],
+      [0, 0, 1],
+    ];
+    expect(getMatrixRank(identity)).toBe(3);
+
+    // 2x2 Invertible Matrix -> Rank 2
+    const square2x2 = [
+      [2, 1],
+      [1, 3],
+    ];
+    expect(getMatrixRank(square2x2)).toBe(2);
+  });
+
+  it("calculates rank-deficient matrices with dependent rows/columns", () => {
+    // Row 3 is 2 * Row 1 + Row 2 -> Rank 2
+    const dependentRows = [
+      [1, 2, 3],
+      [4, 5, 6],
+      [6, 9, 12],
+    ];
+    expect(getMatrixRank(dependentRows)).toBe(2);
+
+    // All rows are scalar multiples of [1, 2, 3] -> Rank 1
+    const rankOne = [
+      [1, 2, 3],
+      [2, 4, 6],
+      [3, 6, 9],
+    ];
+    expect(getMatrixRank(rankOne)).toBe(1);
+  });
+
+  it("handles rectangular matrices (tall and wide)", () => {
+    // 4x2 Tall Matrix (2 linearly independent columns) -> Rank 2
+    const tall = [
+      [1, 0],
+      [0, 1],
+      [2, 3],
+      [4, 5],
+    ];
+    expect(getMatrixRank(tall)).toBe(2);
+
+    // 2x4 Wide Matrix (Rank capped by min(m, n) = 2) -> Rank 2
+    const wide = [
+      [1, 2, 3, 4],
+      [0, 1, 0, 1],
+    ];
+    expect(getMatrixRank(wide)).toBe(2);
+  });
+
+  it("handles zero columns/rows interspersed in the matrix", () => {
+    // Zero column in the middle -> Rank 2
+    const zeroCol = [
+      [1, 0, 2],
+      [0, 0, 1],
+      [3, 0, 0],
+    ];
+    expect(getMatrixRank(zeroCol)).toBe(2);
+
+    // Zero row at top -> Rank 2
+    const zeroRowTop = [
+      [0, 0, 0],
+      [1, 2, 3],
+      [0, 1, 4],
+    ];
+    expect(getMatrixRank(zeroRowTop)).toBe(2);
+  });
+
+  it("correctly filters floating-point noise below threshold", () => {
+    // Row 2 is Row 1 + 1e-12 rounding noise -> Rank 1
+    const noisyMatrix = [
+      [1, 2],
+      [1 + 1e-12, 2],
+    ];
+    expect(getMatrixRank(noisyMatrix, 1e-10)).toBe(1);
+  });
+
+  it("does not mutate the original input array", () => {
+    const original = [
+      [1, 2],
+      [3, 4],
+    ];
+    const copy = JSON.parse(JSON.stringify(original));
+
+    getMatrixRank(original);
+
+    expect(original).toEqual(copy);
   });
 });

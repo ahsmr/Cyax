@@ -700,7 +700,6 @@ export function deriveTransferFunction(
     });
 
     // Populate C and D from output node inputs (y)
-    // Populate C and D from output node inputs (y)
     const outEdges = edges.filter((e) => e.target === outputNode.id);
     outEdges.forEach((e) => {
       // Determine if the incoming branch to the output carries a gain or sign inversion
@@ -892,5 +891,236 @@ export function deriveTransferFunction(
       stepByStep: ["Continuous State-Space matrix solving failed."],
       error: err instanceof Error ? err.message : String(err),
     };
+  }
+}
+
+// ==========================================
+// 6. Helper Classes
+// ==========================================
+
+export function getMatrixRank(
+  matrix: number[][],
+  epsilon: number = 1e-10,
+): number {
+  if (matrix.length === 0 || matrix[0].length === 0) return 0;
+
+  const mat = matrix.map((row) => [...row]);
+  const rows = mat.length;
+  const cols = mat[0].length;
+
+  let rank = 0;
+  let pivotRow = 0;
+
+  for (let col = 0; col < cols && pivotRow < rows; col++) {
+    // 1. Find pivot in current column at or below pivotRow
+    let maxRow = pivotRow;
+    for (let r = pivotRow + 1; r < rows; r++) {
+      if (Math.abs(mat[r][col]) > Math.abs(mat[maxRow][col])) {
+        maxRow = r;
+      }
+    }
+
+    // 2. Skip column if no pivot exists above threshold
+    if (Math.abs(mat[maxRow][col]) <= epsilon) {
+      continue;
+    }
+
+    // 3. Swap current pivot row to top available slot
+    if (maxRow !== pivotRow) {
+      const temp = mat[pivotRow];
+      mat[pivotRow] = mat[maxRow];
+      mat[maxRow] = temp;
+    }
+
+    // 4. Eliminate entries in current column
+    for (let r = 0; r < rows; r++) {
+      if (r !== pivotRow) {
+        const factor = mat[r][col] / mat[pivotRow][col];
+        for (let c = col; c < cols; c++) {
+          mat[r][c] -= factor * mat[pivotRow][c];
+        }
+      }
+    }
+
+    pivotRow++;
+    rank++;
+  }
+
+  return rank;
+}
+
+export function householderQR(A: number[][]): { Q: number[][]; R: number[][] } {
+  const m = A.length;
+  const n = A[0].length;
+
+  // Line 1: R = A
+  const R: number[][] = A.map((row) => [...row]);
+  const vStore: number[][] = [];
+
+  // Line 2: for j = 1 to n do (0-indexed: 0 to n - 1)
+  for (let j = 0; j < n; j++) {
+    // Line 3: x = R_{j:m, j}
+    const x: number[] = [];
+    for (let r = j; r < m; r++) {
+      x.push(R[r][j]);
+    }
+
+    const normX = Math.hypot(...x);
+    if (normX === 0) {
+      const vZero = new Array(m - j).fill(0);
+      vZero[0] = 1;
+      vStore.push(vZero);
+      continue;
+    }
+
+    // Line 4: v_j = x + sign(x_1)*||x||_2 * e_1
+    const signX1 = x[0] >= 0 ? 1 : -1;
+    const v_j = [...x];
+    v_j[0] += signX1 * normX;
+
+    // Line 5: v_j = v_j / ||v_j||_2
+    const normV = Math.hypot(...v_j);
+    for (let i = 0; i < v_j.length; i++) {
+      v_j[i] /= normV;
+    }
+    vStore.push(v_j);
+
+    // Line 6: R_{j,j} = -sign(x_1)*||x||_2, R_{j+1:m, j} = 0
+    R[j][j] = -signX1 * normX;
+    for (let r = j + 1; r < m; r++) {
+      R[r][j] = 0;
+    }
+
+    // Line 7: for k = j + 1 to n do
+    for (let k = j + 1; k < n; k++) {
+      // Line 8: R_{j:m, k} = R_{j:m, k} - 2*(v_j^* * R_{j:m, k})*v_j
+      let dot = 0;
+      for (let r = 0; r < v_j.length; r++) {
+        dot += v_j[r] * R[j + r][k];
+      }
+
+      for (let r = 0; r < v_j.length; r++) {
+        R[j + r][k] -= 2 * dot * v_j[r];
+      }
+    }
+  } // Line 10: end for
+
+  // Construct Q matrix
+  const Q: number[][] = Array.from({ length: m }, () => new Array(n).fill(0));
+
+  // Line 11: for i = 1 to m do
+  for (let i = 0; i < n; i++) {
+    // Line 12: w = e_i
+    const w: number[] = new Array(m).fill(0);
+    w[i] = 1;
+
+    // Line 13: for k = n downto 1 do (0-indexed: n - 1 downto 0)
+    for (let k = n - 1; k >= 0; k--) {
+      const vk = vStore[k];
+
+      // Line 14: w_{k:m} = w_{k:m} - 2*(v_k^* * w_{k:m})*v_k
+      let dot = 0;
+      for (let r = 0; r < vk.length; r++) {
+        dot += vk[r] * w[k + r];
+      }
+
+      for (let r = 0; r < vk.length; r++) {
+        w[k + r] -= 2 * dot * vk[r];
+      }
+    } // Line 15: end for
+
+    // Line 16: Q_{1:m, i} = w
+    for (let r = 0; r < m; r++) {
+      Q[r][i] = w[r];
+    }
+  } // Line 17: end for
+
+  return { Q, R };
+}
+
+export class MatrixAnalysis {
+  A: number[][];
+  B: number[][];
+  C: number[][];
+  d: number;
+
+  constructor(
+    A_mat: number[][],
+    B_mat: number[][],
+    C_mat: number[][],
+    d: number,
+  ) {
+    this.A = A_mat;
+    this.B = B_mat;
+    this.C = C_mat;
+    this.d = d;
+  }
+
+  get isControllable(): boolean {
+    const n = this.A.length;
+    if (n === 0 || this.A[0].length !== n) return false;
+    if (this.B.length !== n || this.B[0].length === 0) return false;
+
+    const C_m: number[][] = Array.from({ length: n }, () => []);
+    let current = this.B.map((row) => row[0]); // B (n x 1)
+
+    // 1. First column of C_m
+    for (let r = 0; r < n; r++) {
+      C_m[r].push(current[r]);
+    }
+
+    // 2. Compute AB, A^2B, ..., A^(n-1)B
+    for (let k = 1; k < n; k++) {
+      const next = new Array<number>(n).fill(0);
+      for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+          next[r] += this.A[r][c] * current[c];
+        }
+      }
+      for (let r = 0; r < n; r++) {
+        C_m[r].push(next[r]);
+      }
+      current = next;
+    }
+
+    return getMatrixRank(C_m) === n;
+  }
+
+  get isObservable(): boolean {
+    const n = this.A.length;
+    if (n === 0 || this.A[0].length !== n) return false;
+    if (this.C.length === 0 || this.C[0].length !== n) return false;
+
+    const O: number[][] = [];
+    let current = [...this.C[0]]; // C (1 x n)
+
+    // 1. First row of O
+    O.push([...current]);
+
+    // 2. Compute CA, CA^2, ..., CA^(n-1)
+    for (let i = 1; i < n; i++) {
+      const next = new Array<number>(n).fill(0);
+      for (let c = 0; c < n; c++) {
+        for (let r = 0; r < n; r++) {
+          next[c] += current[r] * this.A[r][c];
+        }
+      }
+      O.push([...next]);
+      current = next;
+    }
+
+    return getMatrixRank(O) === n;
+  }
+
+  get isMinimal(): boolean {
+    return this.isControllable && this.isObservable;
+  }
+
+  get isInternallyStable(): boolean {
+    return false; //TODO
+  }
+
+  get isIOStable(): boolean {
+    return false; // TODO
   }
 }
