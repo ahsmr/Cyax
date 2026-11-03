@@ -718,12 +718,31 @@ export function deriveTransferFunction(
     const latexB = matrixToLaTeX(B_mat);
     const latexC = matrixToLaTeX(C_mat);
     const latexD = `[${Number(D_val.toFixed(4))}]`;
+    const continousAnalysisOfMatrix = new MatrixAnalysis(
+      A_mat,
+      B_mat,
+      C_mat,
+      D_val,
+    );
+    const isControllable = continousAnalysisOfMatrix.isControllable;
+    const isObservable = continousAnalysisOfMatrix.isObservable;
+    const isMinimal = continousAnalysisOfMatrix.isMinimal;
+    const isInternallyStable = continousAnalysisOfMatrix.isInternallyStable;
+    const check = "\\color{green}{\\checkmark}";
+    const cross = "\\color{red}{\\boldsymbol{\\times}}";
 
     // Step 1: Formulate with numerical state-space system equations
     stepByStep.push(
       `\\text{Step 1: Formulate Continuous-Time State-Space Representation}\\\\[0.5em]` +
         `\\dot{\\mathbf{x}}(t) = ${latexA}\\mathbf{x}(t) + ${latexB}u(t)\\\\[1em]` +
-        `y(t) = ${latexC}\\mathbf{x}(t) + ${latexD}u(t)`,
+        `y(t) = ${latexC}\\mathbf{x}(t) + ${latexD}u(t)\\\\[1.5em]` +
+        `\\begin{aligned}` +
+        `\\mathbf{System\\ Property\\ Checklist} \\\\[8pt]` +
+        `\\text{Controllability:} & \\quad ${isControllable ? check : cross} \\quad \\text{(${isControllable ? "Controllable" : "Not Controllable"})} \\\\[6pt]` +
+        `\\text{Observability:} & \\quad ${isObservable ? check : cross} \\quad \\text{(${isObservable ? "Observable" : "Not Observable"})} \\\\[6pt]` +
+        `\\text{Minimality:} & \\quad ${isMinimal ? check : cross} \\quad \\text{(${isMinimal ? "Minimal Realization" : "Non-Minimal Realization"})} \\\\[6pt]` +
+        `\\text{Internal Stability:} & \\quad ${isInternallyStable ? check : cross} \\quad \\text{(${isInternallyStable ? "Internally Stable" : "Internally Unstable"})}` +
+        `\\end{aligned}`,
     );
 
     // Step 2: Clean KaTeX transfer function formula string
@@ -1050,13 +1069,17 @@ export function householderQR(A: number[][]): { Q: number[][]; R: number[][] } {
 }
 
 /**
- *  Computes the eigenvalues of a square matrix A using the QR algorithm (householder). 
+ *  Computes the eigenvalues of a square matrix A using the QR algorithm (householder).
  * @param A             | The input square matrix (n x n) for which to compute eigenvalues.
  * @param maxIterations | The maximum number of iterations to perform (default: 1000).
  * @param tolerance     | The convergence tolerance for off-diagonal elements (default: EPSILON).
  * @returns             | An array of eigenvalues of the matrix A.
  */
-function getEigenvalues(A: number[][], maxIterations = 1000, tolerance = EPSILON): number[] {
+function getEigenvalues(
+  A: number[][],
+  maxIterations = 1000,
+  tolerance = EPSILON,
+): number[] {
   const n = A.length;
   // Deep clone A to avoid mutating the original matrix
   let Ak = A.map((row) => [...row]);
@@ -1066,7 +1089,9 @@ function getEigenvalues(A: number[][], maxIterations = 1000, tolerance = EPSILON
     const { Q, R } = householderQR(Ak);
 
     // 2. Recombine: A_{k+1} = R * Q
-    const A_next: number[][] = Array.from({ length: n }, () => new Array(n).fill(0));
+    const A_next: number[][] = Array.from({ length: n }, () =>
+      new Array(n).fill(0),
+    );
     for (let i = 0; i < n; i++) {
       for (let j = 0; j < n; j++) {
         let sum = 0;
@@ -1102,10 +1127,10 @@ function getEigenvalues(A: number[][], maxIterations = 1000, tolerance = EPSILON
 }
 
 /**
- * Class for analyzing the controllability, observability, 
+ * Class for analyzing the controllability, observability,
  * minimality, and stability of a state-space system defined by matrices A, B, C, and d.
  * The system is defined by the equations:
- * 
+ *
  *   x_dot = A * x + B * u
  *   y = C * x + d * u
  */
@@ -1116,8 +1141,8 @@ export class MatrixAnalysis {
   d: number;
 
   /**
-   * Constructs a MatrixAnalysis instance with the given state-space matrices. 
-   * @param A_mat | The state transition matrix (n x n). 
+   * Constructs a MatrixAnalysis instance with the given state-space matrices.
+   * @param A_mat | The state transition matrix (n x n).
    * @param B_mat | The input matrix (n x m).
    * @param C_mat | The output matrix (p x n).
    * @param d | The feedthrough matrix (p x m).
@@ -1211,14 +1236,13 @@ export class MatrixAnalysis {
    * @returns | True if the system is internally stable, false otherwise.
    */
   get isInternallyStable(): boolean {
-  
-  /** 
-   * In majority of cases, 50 is sufficient for convergence of the QR algorithm to approximate eigenvalues 
-   * since the matrices are small most of the time. 
-   * */
-  const eigenvalues = getEigenvalues(this.A,50, EPSILON);
+    /**
+     * In majority of cases, 50 is sufficient for convergence of the QR algorithm to approximate eigenvalues
+     * since the matrices are small most of the time.
+     * */
+    const eigenvalues = getEigenvalues(this.A, 50, EPSILON);
 
-  // System is internally stable if ALL eigenvalues satisfy Re(λ) < 0 (for continuous-time systems)
-  return eigenvalues.every((lambda) => lambda < EPSILON);
+    // System is internally stable if ALL eigenvalues satisfy Re(λ) < 0 (for continuous-time systems)
+    return eigenvalues.every((lambda) => lambda < EPSILON);
   }
 }
