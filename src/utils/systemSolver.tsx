@@ -905,7 +905,7 @@ export function deriveTransferFunction(
  */
 export function getMatrixRank(
   matrix: number[][],
-  epsilon: number = 1e-10,
+  epsilon: number = EPSILON,
 ): number {
   if (matrix.length === 0 || matrix[0].length === 0) return 0;
 
@@ -1211,8 +1211,12 @@ export class MatrixAnalysis {
    * @returns | True if the system is internally stable, false otherwise.
    */
   get isInternallyStable(): boolean {
-
-  const eigenvalues = getEigenvalues(this.A);
+  
+  /** 
+   * In majority of cases, 50 is sufficient for convergence of the QR algorithm to approximate eigenvalues 
+   * since the matrices are small most of the time. 
+   * */
+  const eigenvalues = getEigenvalues(this.A,50, EPSILON);
 
   // System is internally stable if ALL eigenvalues satisfy Re(λ) < 0 (for continuous-time systems)
   return eigenvalues.every((lambda) => lambda < EPSILON);
