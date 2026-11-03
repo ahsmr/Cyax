@@ -897,7 +897,12 @@ export function deriveTransferFunction(
 // ==========================================
 // 6. Helper Classes
 // ==========================================
-
+/**
+ * Computes the rank of a matrix using Gaussian elimination.
+ * @param matrix  | The input matrix as a 2D array of numbers.
+ * @param epsilon | A small threshold to treat values as zero (default: 1e-10).
+ * @returns       | The rank of the matrix.
+ */
 export function getMatrixRank(
   matrix: number[][],
   epsilon: number = 1e-10,
@@ -949,6 +954,11 @@ export function getMatrixRank(
   return rank;
 }
 
+/**
+ * Performs QR decomposition of a matrix A using Householder transformations.
+ * @param A | The input matrix to decompose (m x n).
+ * @returns | An object containing orthogonal matrix Q and upper triangular matrix R such that A = QR.
+ */
 export function householderQR(A: number[][]): { Q: number[][]; R: number[][] } {
   const m = A.length;
   const n = A[0].length;
@@ -965,6 +975,7 @@ export function householderQR(A: number[][]): { Q: number[][]; R: number[][] } {
       x.push(R[r][j]);
     }
 
+    // Compute the 2-norm of x
     const normX = Math.hypot(...x);
     if (normX === 0) {
       const vZero = new Array(m - j).fill(0);
@@ -1038,12 +1049,79 @@ export function householderQR(A: number[][]): { Q: number[][]; R: number[][] } {
   return { Q, R };
 }
 
+/**
+ *  Computes the eigenvalues of a square matrix A using the QR algorithm (householder). 
+ * @param A             | The input square matrix (n x n) for which to compute eigenvalues.
+ * @param maxIterations | The maximum number of iterations to perform (default: 1000).
+ * @param tolerance     | The convergence tolerance for off-diagonal elements (default: EPSILON).
+ * @returns             | An array of eigenvalues of the matrix A.
+ */
+function getEigenvalues(A: number[][], maxIterations = 1000, tolerance = EPSILON): number[] {
+  const n = A.length;
+  // Deep clone A to avoid mutating the original matrix
+  let Ak = A.map((row) => [...row]);
+
+  for (let iter = 0; iter < maxIterations; iter++) {
+    // 1. Perform QR decomposition on Ak
+    const { Q, R } = householderQR(Ak);
+
+    // 2. Recombine: A_{k+1} = R * Q
+    const A_next: number[][] = Array.from({ length: n }, () => new Array(n).fill(0));
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        let sum = 0;
+        for (let k = 0; k < n; k++) {
+          sum += R[i][k] * Q[k][j];
+        }
+        A_next[i][j] = sum;
+      }
+    }
+
+    // 3. Check for convergence (off-diagonal norm/magnitude)
+    let offDiagonalSum = 0;
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < i; j++) {
+        offDiagonalSum += Math.abs(A_next[i][j]);
+      }
+    }
+
+    Ak = A_next;
+
+    if (offDiagonalSum < tolerance) {
+      break;
+    }
+  }
+
+  // Extract diagonal elements (eigenvalues)
+  const eigenvalues: number[] = [];
+  for (let i = 0; i < n; i++) {
+    eigenvalues.push(Ak[i][i]);
+  }
+
+  return eigenvalues;
+}
+
+/**
+ * Class for analyzing the controllability, observability, 
+ * minimality, and stability of a state-space system defined by matrices A, B, C, and d.
+ * The system is defined by the equations:
+ * 
+ *   x_dot = A * x + B * u
+ *   y = C * x + d * u
+ */
 export class MatrixAnalysis {
   A: number[][];
   B: number[][];
   C: number[][];
   d: number;
 
+  /**
+   * Constructs a MatrixAnalysis instance with the given state-space matrices. 
+   * @param A_mat | The state transition matrix (n x n). 
+   * @param B_mat | The input matrix (n x m).
+   * @param C_mat | The output matrix (p x n).
+   * @param d | The feedthrough matrix (p x m).
+   */
   constructor(
     A_mat: number[][],
     B_mat: number[][],
@@ -1056,6 +1134,10 @@ export class MatrixAnalysis {
     this.d = d;
   }
 
+  /**
+   * Determines if the system is controllable by checking the rank of the controllability matrix.
+   * @returns | True if the system is controllable, false otherwise.
+   */
   get isControllable(): boolean {
     const n = this.A.length;
     if (n === 0 || this.A[0].length !== n) return false;
@@ -1086,6 +1168,10 @@ export class MatrixAnalysis {
     return getMatrixRank(C_m) === n;
   }
 
+  /**
+   * Determines if the system is observable by checking the rank of the observability matrix.
+   * @returns | True if the system is observable, false otherwise.
+   */
   get isObservable(): boolean {
     const n = this.A.length;
     if (n === 0 || this.A[0].length !== n) return false;
@@ -1112,15 +1198,23 @@ export class MatrixAnalysis {
     return getMatrixRank(O) === n;
   }
 
+  /**
+   * Determines if the system is minimal by checking if it is both controllable and observable.
+   * @returns | True if the system is minimal, false otherwise.
+   */
   get isMinimal(): boolean {
     return this.isControllable && this.isObservable;
   }
 
+  /**
+   * Determines if the system is internally stable by checking the eigenvalues of the state transition matrix.
+   * @returns | True if the system is internally stable, false otherwise.
+   */
   get isInternallyStable(): boolean {
-    return false; //TODO
-  }
 
-  get isIOStable(): boolean {
-    return false; // TODO
+  const eigenvalues = getEigenvalues(this.A);
+
+  // System is internally stable if ALL eigenvalues satisfy Re(λ) < 0 (for continuous-time systems)
+  return eigenvalues.every((lambda) => lambda < EPSILON);
   }
 }
