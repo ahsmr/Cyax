@@ -2,15 +2,15 @@ import type { Node, Edge } from "@xyflow/react";
 import { evalPolyComplexATS } from "./laplaceEngine";
 /**
  * @todo [X] | 1) Diff equation has to be implemented
- * @todo [ ] | 2) Impulse reponse has to be implemented
+ * @todo [X] | 2) Impulse reponse has to be implemented
  * @todo [ ] | 3) Step response has to be implemented
- * @todo [ ] | 4) minimality and overservabiltiy and readabilty and internally/BIBO stability has to be implemented
+ * @todo [X] | 4) minimality and overservabiltiy and readabilty and internally/BIBO stability has to be implemented
  * @todo [ ] | 5) Add support for discrete-time systems (z-domain)
  * @todo [ ] | 6) Add support for MIMO systems (multiple inputs and outputs) (Low priority)
  * @todo [ ] | 7) Add Nyquist diagram too
  * @todo [ ] | 8) Add steady state response/error and transient response analysis (Low priority)
  * @todo [ ] | 9) Add support for compensators and controllers (PID, Lead, Lag, etc.) (Low priority)
- * @todo [ ] | 10) Add support for simplifying so that it actually simplfies the transfer function (Low priority)
+ * @todo [X] | 10) Add support for simplifying so that it actually simplfies the transfer function (Low priority)
  * @todo [X] | 11) Add support for the factorization of polynomials into irreducible factors
  */
 

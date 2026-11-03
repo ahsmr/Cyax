@@ -25,6 +25,8 @@ import { deriveTransferFunction } from "../utils/systemSolver";
 import type { SolverResult } from "../utils/systemSolver";
 import BodePlot from "./BodePlot";
 import styles from "./SystemAnalysis.module.css";
+import { inverseLaplace } from "../utils/laplaceEngine";
+import type { InverseLaplaceResult } from "../utils/laplaceEngine";
 
 /**
  * * Node Type Registry
@@ -194,6 +196,30 @@ const SystemAnalysis: React.FC = () => {
     setSolverOutput(res);
   };
 
+  const [impulseResult, setImpulseResult] =
+    useState<InverseLaplaceResult | null>(null);
+  const [impulseError, setImpulseError] = useState<string | null>(null);
+
+  const runImpulseResponse = () => {
+    setImpulseError(null);
+
+    if (!solverOutput?.numerator || !solverOutput?.denominator) {
+      setImpulseError("Transfer function must be computed first.");
+      setImpulseResult(null);
+      return;
+    }
+
+    try {
+      const res = inverseLaplace(
+        solverOutput.numerator,
+        solverOutput.denominator,
+      );
+      setImpulseResult(res);
+    } catch {
+      setImpulseError("Failed to compute impulse response.");
+      setImpulseResult(null);
+    }
+  };
   // ==========================================
   // 3. CANVAS EVENT HANDLERS
   // ==========================================
@@ -417,6 +443,69 @@ const SystemAnalysis: React.FC = () => {
             numerator={solverOutput.numerator}
             denominator={solverOutput.denominator}
           />
+
+          {/* Card 4: Impulse Response Computation */}
+          <div className="card" style={{ padding: "20px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <span className="section-label" style={{ margin: 0 }}>
+                Impulse Response h(t)
+              </span>
+
+              {/* Play Button for Impulse Response Computation */}
+              <button
+                className="secondary-btn"
+                onClick={runImpulseResponse}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  borderColor: "var(--sky-blue)",
+                  color: "var(--sky-blue)",
+                }}
+              >
+                <Play size={12} fill="currentColor" /> Compute Impulse Response
+              </button>
+            </div>
+
+            <div
+              style={{
+                marginTop: "12px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px",
+              }}
+            >
+              {/* Error Message Display */}
+              {impulseError && (
+                <div
+                  className="metric-box"
+                  style={{
+                    padding: "12px",
+                    textAlign: "left",
+                    color: "#ef4444",
+                  }}
+                >
+                  {impulseError}
+                </div>
+              )}
+
+              {/* Computed Impulse Response Result */}
+              {impulseResult && (
+                <div
+                  className="metric-box"
+                  style={{ padding: "12px", textAlign: "left" }}
+                >
+                  <MathView math={impulseResult.latexEquation} displayMode />
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* RIGHT COLUMN: Parameters & Config Panel */}
