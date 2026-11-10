@@ -1,5 +1,5 @@
 //import {evalPolyComplex} from './bodeEngine';
-import { calculateAmp, calculateArg } from "./bodeEngine";
+import { evalPolyComplex } from "./bodeEngine";
 import type { Poly } from "./systemSolver";
 
 /**
@@ -43,6 +43,34 @@ export interface NyquistDrawOptions {
 }
 
 /**
+ *  Calculates the complex frequency response H(j*omega) of a transfer function defined
+ *  by its numerator and denominator polynomials at a specific frequency omega.
+ * @param num   | Numerator polynomial coefficients (highest degree first)
+ * @param den   | Denominator polynomial coefficients (highest degree first)
+ * @param omega | Frequency in rad/s at which to evaluate the transfer function
+ * @returns     | An object containing the real and imaginary parts of H(j*omega)
+ */
+export function calculateH(
+  num: Poly,
+  den: Poly,
+  omega: number,
+): { real: number; imag: number } {
+  const N = evalPolyComplex(num, omega);
+  const D = evalPolyComplex(den, omega);
+
+  const denSq = D.re * D.re + D.im * D.im; //if the denominator is zero
+  if (denSq === 0) return { real: 0, imag: 0 };
+
+  return {
+    // Otherwise
+    real: (N.re * D.re + N.im * D.im) / denSq, // Complex Conjugate Division!!!
+    imag: (N.im * D.re - N.re * D.im) / denSq,
+  };
+}
+
+
+
+/**
  * Generates Nyquist plot data for a given transfer function defined by its numerator and denominator polynomials.
  * @param num             | Numerator polynomial coefficients (highest degree first)
  * @param den             | Denominator polynomial coefficients (highest degree first)
@@ -59,42 +87,51 @@ export interface NyquistDrawOptions {
  *                  => [{frequency: 0.01, real: ..., imag: ..., amplitude: ..., phaseRad: ..., phaseDeg: ...}, ...]
  */
 export function generateNyquistData(
-  num: Poly,
-  den: Poly,
-  wMin = 0.01,
+  num: number[],
+  den: number[],
+  wMin = 0.001,
   wMax = 1000,
-  pointsPerDecade = 50,
+  pointsPerDecade = 100,
 ): NyquistPoint[] {
-  const data: NyquistPoint[] = [];
+  const posPoints: NyquistPoint[] = [];
 
   const decMin = Math.log10(wMin);
   const decMax = Math.log10(wMax);
   const totalDecades = decMax - decMin;
   const totalPoints = Math.round(totalDecades * pointsPerDecade);
 
+  // 1. Sweep positive frequencies (0 -> +infinity)
   for (let i = 0; i <= totalPoints; i++) {
-    const logW = decMin + (i / totalPoints) * (decMax - decMin);
+    const logW = decMin + (i / totalPoints) * totalDecades;
     const omega = Math.pow(10, logW);
 
-    // Calculate magnitude (amplitude) and phase (arg) passing (num, den, omega)
-    const amp = calculateAmp(num, den, omega);
-    const arg = calculateArg(num, den, omega); // phase in radians
+    const { real, imag } = calculateH(num, den, omega);
+    const amp = Math.hypot(real, imag);
+    const argRad = Math.atan2(imag, real);
 
-    // Coordinates based on formula: amp * (cos(arg) + j * sin(arg))
-    const real = amp * Math.cos(arg);
-    const imag = amp * Math.sin(arg);
-
-    data.push({
+    posPoints.push({
       frequency: omega,
       real: Number(real.toFixed(6)),
       imag: Number(imag.toFixed(6)),
       amplitude: amp,
-      phaseRad: arg,
-      phaseDeg: (arg * 180) / Math.PI,
+      phaseRad: argRad,
+      phaseDeg: (argRad * 180) / Math.PI,
     });
   }
 
-  return data;
+  // 2. Mirror across real axis for negative frequencies (-infinity -> 0)
+  const negPoints: NyquistPoint[] = posPoints
+    .slice()
+    .reverse()
+    .map((pt) => ({
+      ...pt,
+      frequency: -pt.frequency,
+      imag: -pt.imag,
+      phaseRad: -pt.phaseRad,
+      phaseDeg: -pt.phaseDeg,
+    }));
+
+  return [...negPoints, ...posPoints];
 }
 
 /**
@@ -109,7 +146,7 @@ export function drawNyquistPlot(
   data: NyquistPoint[],
   options: NyquistDrawOptions = {},
 ): void {
-  if (data.length === 0) return;
+  if (!data || data.length === 0) return;
 
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
@@ -118,9 +155,9 @@ export function drawNyquistPlot(
   const height = canvas.height;
 
   const {
-    title = "Nyquist-diagram",
+    title = "Nyquist Diagram",
     strokeColor = "#1e40af",
-    gridColor = "#d1d5db",
+    gridColor = "#e5e7eb",
     axisColor = "#374151",
     criticalPointColor = "#dc2626",
     textColor = "#374151",
@@ -130,7 +167,7 @@ export function drawNyquistPlot(
   ctx.clearRect(0, 0, width, height);
   ctx.font = font;
 
-  // Margins matching Bode plot layout style
+  // Layout Margins
   const marginLeft = 65;
   const marginRight = 35;
   const marginTop = 35;
@@ -139,10 +176,7 @@ export function drawNyquistPlot(
   const plotWidth = width - marginLeft - marginRight;
   const plotHeight = height - marginTop - marginBottom;
 
-  // --- 1. FILTER & CLAMP EXTREME VALUE SPIKES (e.g. poles at s = ±j1) ---
-  const maxPlotLimit = 10;
-  const minPlotLimit = -10;
-
+  // --- 1. FILTER VALID DATA & COMPUTE BOUNDS ---
   const validPoints = data.filter(
     (pt) =>
       !isNaN(pt.real) &&
@@ -159,14 +193,10 @@ export function drawNyquistPlot(
     maxIm = -Infinity;
 
   validPoints.forEach((pt) => {
-    // Clamp limits to prevent infinity spikes from blowing up graph scale
-    const re = Math.max(minPlotLimit, Math.min(maxPlotLimit, pt.real));
-    const im = Math.max(minPlotLimit, Math.min(maxPlotLimit, pt.imag));
-
-    if (re < minRe) minRe = re;
-    if (re > maxRe) maxRe = re;
-    if (im < minIm) minIm = im;
-    if (im > maxIm) maxIm = im;
+    if (pt.real < minRe) minRe = pt.real;
+    if (pt.real > maxRe) maxRe = pt.real;
+    if (pt.imag < minIm) minIm = pt.imag;
+    if (pt.imag > maxIm) maxIm = pt.imag;
   });
 
   // Ensure critical point (-1, j0) and origin (0, 0) are always visible inside viewport
@@ -197,7 +227,7 @@ export function drawNyquistPlot(
     plotHeight -
     ((im - finalMinIm) / (finalMaxIm - finalMinIm)) * plotHeight;
 
-  // --- 2. DYNAMIC ORDER-OF-MAGNITUDE GRID STEP CALCULATION ---
+  // --- 2. DYNAMIC GRID STEP CALCULATION ---
   const targetTicks = 6;
   const rawStep = maxSpan / targetTicks;
 
@@ -320,23 +350,15 @@ export function drawNyquistPlot(
 
   // --- 8. DRAW NYQUIST LOCUS CURVE ---
   ctx.strokeStyle = strokeColor;
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = 2;
   ctx.beginPath();
 
-  let isDrawing = false;
-  validPoints.forEach((pt) => {
-    // Skip rendering segments that shoot off past plot limits
-    if (Math.abs(pt.real) > maxPlotLimit || Math.abs(pt.imag) > maxPlotLimit) {
-      isDrawing = false;
-      return;
-    }
-
+  validPoints.forEach((pt, idx) => {
     const x = mapX(pt.real);
     const y = mapY(pt.imag);
 
-    if (!isDrawing) {
+    if (idx === 0) {
       ctx.moveTo(x, y);
-      isDrawing = true;
     } else {
       ctx.lineTo(x, y);
     }
