@@ -1,10 +1,9 @@
 //import {evalPolyComplex} from './bodeEngine';
-import {calculateAmp, calculateArg} from './bodeEngine';
-import type {Poly} from './systemSolver'
-
+import { calculateAmp, calculateArg } from "./bodeEngine";
+import type { Poly } from "./systemSolver";
 
 /**
- * Represents a point in the Nyquist plot. 
+ * Represents a point in the Nyquist plot.
  * @property frequency | Frequency in rad/s
  * @property real      | Real part of the complex number
  * @property imag      | Imaginary part of the complex number
@@ -14,17 +13,17 @@ import type {Poly} from './systemSolver'
  */
 export interface NyquistPoint {
   frequency: number; // rad/s
-  real: number;      // Re{H(j*omega)} = amp * cos(arg)
-  imag: number;      // Im{H(j*omega)} = amp * sin(arg)
+  real: number; // Re{H(j*omega)} = amp * cos(arg)
+  imag: number; // Im{H(j*omega)} = amp * sin(arg)
   amplitude: number; // |H(j*omega)|
-  phaseRad: number;  // Arg(H(j*omega)) in radians
-  phaseDeg: number;  // Arg(H(j*omega)) in degrees
+  phaseRad: number; // Arg(H(j*omega)) in radians
+  phaseDeg: number; // Arg(H(j*omega)) in degrees
 }
 
 /**
  * Options for customizing the appearance of the Nyquist plot when drawn on a canvas.
  * @property title               | Title of the plot (default: "Nyquist-diagram")
- * @property strokeColor         | Color of the Nyquist curve (default: "#1e40af")   
+ * @property strokeColor         | Color of the Nyquist curve (default: "#1e40af")  
  * @property gridColor           | Color of the major grid lines (default: "#d1d5db")
  * @property subGridColor        | Color of the minor grid lines (default: "#f3f4f6")
  * @property axisColor           | Color of the axes (default: "#374151")
@@ -51,12 +50,12 @@ export interface NyquistDrawOptions {
  * @param wMax            | Maximum frequency in rad/s (default: 1000)
  * @param pointsPerDecade | Number of points to generate per decade (default: 50)
  * @returns               | Array of NyquistPoint objects representing the Nyquist plot data
- * 
- * 
- * @example | generateNyquistData([1], [1, 1], 0.01, 1000, 50) 
+ *
+ *
+ * @example | generateNyquistData([1], [1, 1], 0.01, 1000, 50)
  *                  => [{frequency: 0.01, real: ..., imag: ..., amplitude: ..., phaseRad: ..., phaseDeg: ...}, ...]
- * 
- * @example | generateNyquistData([1, 2], [1, 3, 2], 0.01, 1000, 50) 
+ *
+ * @example | generateNyquistData([1, 2], [1, 3, 2], 0.01, 1000, 50)
  *                  => [{frequency: 0.01, real: ..., imag: ..., amplitude: ..., phaseRad: ..., phaseDeg: ...}, ...]
  */
 export function generateNyquistData(
@@ -64,7 +63,7 @@ export function generateNyquistData(
   den: Poly,
   wMin = 0.01,
   wMax = 1000,
-  pointsPerDecade = 50
+  pointsPerDecade = 50,
 ): NyquistPoint[] {
   const data: NyquistPoint[] = [];
 
@@ -108,7 +107,7 @@ export function generateNyquistData(
 export function drawNyquistPlot(
   canvas: HTMLCanvasElement,
   data: NyquistPoint[],
-  options: NyquistDrawOptions = {}
+  options: NyquistDrawOptions = {},
 ): void {
   if (data.length === 0) return;
 
@@ -122,7 +121,6 @@ export function drawNyquistPlot(
     title = "Nyquist-diagram",
     strokeColor = "#1e40af",
     gridColor = "#d1d5db",
-    subGridColor = "#f3f4f6",
     axisColor = "#374151",
     criticalPointColor = "#dc2626",
     textColor = "#374151",
@@ -134,33 +132,50 @@ export function drawNyquistPlot(
 
   // Margins matching Bode plot layout style
   const marginLeft = 65;
-  const marginRight = 25;
+  const marginRight = 35;
   const marginTop = 35;
   const marginBottom = 45;
 
   const plotWidth = width - marginLeft - marginRight;
   const plotHeight = height - marginTop - marginBottom;
 
-  // --- 1. DETERMINE AXIS BOUNDS & ASPECT RATIO ---
+  // --- 1. FILTER & CLAMP EXTREME VALUE SPIKES (e.g. poles at s = ±j1) ---
+  const maxPlotLimit = 10;
+  const minPlotLimit = -10;
+
+  const validPoints = data.filter(
+    (pt) =>
+      !isNaN(pt.real) &&
+      !isNaN(pt.imag) &&
+      isFinite(pt.real) &&
+      isFinite(pt.imag),
+  );
+
+  if (validPoints.length === 0) return;
+
   let minRe = Infinity,
     maxRe = -Infinity;
   let minIm = Infinity,
     maxIm = -Infinity;
 
-  for (const pt of data) {
-    if (pt.real < minRe) minRe = pt.real;
-    if (pt.real > maxRe) maxRe = pt.real;
-    if (pt.imag < minIm) minIm = pt.imag;
-    if (pt.imag > maxIm) maxIm = pt.imag;
-  }
+  validPoints.forEach((pt) => {
+    // Clamp limits to prevent infinity spikes from blowing up graph scale
+    const re = Math.max(minPlotLimit, Math.min(maxPlotLimit, pt.real));
+    const im = Math.max(minPlotLimit, Math.min(maxPlotLimit, pt.imag));
 
-  // Ensure critical point (-1, j0) is included inside plot range
-  minRe = Math.min(minRe, -1.2);
-  maxRe = Math.max(maxRe, 0.5);
-  minIm = Math.min(minIm, -1.0);
-  maxIm = Math.max(maxIm, 1.0);
+    if (re < minRe) minRe = re;
+    if (re > maxRe) maxRe = re;
+    if (im < minIm) minIm = im;
+    if (im > maxIm) maxIm = im;
+  });
 
-  // Preserve 1:1 aspect ratio mapping across Cartesian viewport
+  // Ensure critical point (-1, j0) and origin (0, 0) are always visible inside viewport
+  minRe = Math.min(minRe, -1.5);
+  maxRe = Math.max(maxRe, 1.5);
+  minIm = Math.min(minIm, -1.5);
+  maxIm = Math.max(maxIm, 1.5);
+
+  // Preserve 1:1 square aspect ratio
   const spanRe = maxRe - minRe;
   const spanIm = maxIm - minIm;
   const maxSpan = Math.max(spanRe, spanIm);
@@ -178,98 +193,81 @@ export function drawNyquistPlot(
     marginLeft + ((re - finalMinRe) / (finalMaxRe - finalMinRe)) * plotWidth;
 
   const mapY = (im: number) =>
-    marginTop + plotHeight - ((im - finalMinIm) / (finalMaxIm - finalMinIm)) * plotHeight;
+    marginTop +
+    plotHeight -
+    ((im - finalMinIm) / (finalMaxIm - finalMinIm)) * plotHeight;
 
-  // --- 2. DRAW TITLE ---
+  // --- 2. DYNAMIC ORDER-OF-MAGNITUDE GRID STEP CALCULATION ---
+  const targetTicks = 6;
+  const rawStep = maxSpan / targetTicks;
+
+  const exponent = Math.floor(Math.log10(rawStep));
+  const fraction = rawStep / Math.pow(10, exponent);
+
+  let niceFraction = 1;
+  if (fraction > 5) niceFraction = 10;
+  else if (fraction > 2) niceFraction = 5;
+  else if (fraction > 1) niceFraction = 2;
+
+  const gridStep = niceFraction * Math.pow(10, exponent);
+
+  // --- 3. DRAW TITLE ---
   ctx.textAlign = "center";
   ctx.fillStyle = textColor;
   ctx.fillText(title, marginLeft + plotWidth / 2, marginTop - 15);
 
-  // --- 3. DYNAMIC GRID CALCULATIONS & SUB-GRID LINES ---
-  const rawStep = maxSpan / 6;
-  const gridStep =
-    rawStep > 2
-      ? 5
-      : rawStep > 1
-        ? 2
-        : rawStep > 0.4
-          ? 0.5
-          : rawStep > 0.15
-            ? 0.2
-            : 0.1;
+  // --- 4. DRAW GRID & TICK LABELS ---
+  const startRe = Math.ceil(finalMinRe / gridStep) * gridStep;
+  const endRe = Math.floor(finalMaxRe / gridStep) * gridStep;
+  const startIm = Math.ceil(finalMinIm / gridStep) * gridStep;
+  const endIm = Math.floor(finalMaxIm / gridStep) * gridStep;
 
-  const startRe = Math.floor(finalMinRe / gridStep) * gridStep;
-  const endRe = Math.ceil(finalMaxRe / gridStep) * gridStep;
-  const startIm = Math.floor(finalMinIm / gridStep) * gridStep;
-  const endIm = Math.ceil(finalMaxIm / gridStep) * gridStep;
-
-  // Draw minor sub-grid lines
-  ctx.strokeStyle = subGridColor;
-  ctx.lineWidth = 1;
-  ctx.setLineDash([2, 2]);
-
-  const subStep = gridStep / 2;
-  for (let r = startRe; r <= endRe; r += subStep) {
-    const x = mapX(r);
-    if (x >= marginLeft && x <= marginLeft + plotWidth) {
-      ctx.beginPath();
-      ctx.moveTo(x, marginTop);
-      ctx.lineTo(x, marginTop + plotHeight);
-      ctx.stroke();
-    }
-  }
-  for (let im = startIm; im <= endIm; im += subStep) {
-    const y = mapY(im);
-    if (y >= marginTop && y <= marginTop + plotHeight) {
-      ctx.beginPath();
-      ctx.moveTo(marginLeft, y);
-      ctx.lineTo(marginLeft + plotWidth, y);
-      ctx.stroke();
-    }
-  }
-
-  // Draw major grid lines & X-axis tick labels
-  ctx.setLineDash([]);
   ctx.strokeStyle = gridColor;
-  ctx.textAlign = "center";
+  ctx.lineWidth = 1;
 
-  for (let r = startRe; r <= endRe; r += gridStep) {
+  // Vertical Grid Lines & X-Axis Labels
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  for (let r = startRe; r <= endRe + gridStep / 2; r += gridStep) {
     const x = mapX(r);
-    if (x >= marginLeft && x <= marginLeft + plotWidth) {
+    if (x >= marginLeft - 1 && x <= marginLeft + plotWidth + 1) {
       ctx.beginPath();
       ctx.moveTo(x, marginTop);
       ctx.lineTo(x, marginTop + plotHeight);
       ctx.stroke();
 
       ctx.fillStyle = textColor;
-      ctx.fillText(Number(r.toFixed(2)).toString(), x, marginTop + plotHeight + 18);
+      const valStr = Math.abs(r) < 1e-6 ? "0" : Number(r.toFixed(2)).toString();
+      ctx.fillText(valStr, x, marginTop + plotHeight + 6);
     }
   }
 
-  // Draw Y-axis tick labels
+  // Horizontal Grid Lines & Y-Axis Labels
   ctx.textAlign = "right";
   ctx.textBaseline = "middle";
-  for (let im = startIm; im <= endIm; im += gridStep) {
+  for (let im = startIm; im <= endIm + gridStep / 2; im += gridStep) {
     const y = mapY(im);
-    if (y >= marginTop && y <= marginTop + plotHeight) {
+    if (y >= marginTop - 1 && y <= marginTop + plotHeight + 1) {
       ctx.beginPath();
       ctx.moveTo(marginLeft, y);
       ctx.lineTo(marginLeft + plotWidth, y);
       ctx.stroke();
 
       ctx.fillStyle = textColor;
-      ctx.fillText(Number(im.toFixed(2)).toString(), marginLeft - 8, y);
+      const valStr =
+        Math.abs(im) < 1e-6 ? "0" : Number(im.toFixed(2)).toString();
+      ctx.fillText(valStr, marginLeft - 8, y);
     }
   }
 
-  // --- 4. DRAW ZERO AXES & CRITICAL POINT (-1, j0) ---
+  // --- 5. DRAW ZERO AXES & CRITICAL POINT (-1, j0) ---
   ctx.strokeStyle = axisColor;
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 1.5;
 
   const originX = mapX(0);
   const originY = mapY(0);
 
-  // Re-axis line (Im = 0)
+  // Real axis line (Im = 0)
   if (originY >= marginTop && originY <= marginTop + plotHeight) {
     ctx.beginPath();
     ctx.moveTo(marginLeft, originY);
@@ -277,7 +275,7 @@ export function drawNyquistPlot(
     ctx.stroke();
   }
 
-  // Im-axis line (Re = 0)
+  // Imaginary axis line (Re = 0)
   if (originX >= marginLeft && originX <= marginLeft + plotWidth) {
     ctx.beginPath();
     ctx.moveTo(originX, marginTop);
@@ -300,15 +298,16 @@ export function drawNyquistPlot(
     ctx.fill();
 
     ctx.textAlign = "right";
-    ctx.fillText("(-1, j0)", critX - 6, critY - 8);
+    ctx.textBaseline = "bottom";
+    ctx.fillText("(-1, j0)", critX - 6, critY - 6);
   }
 
-  // --- 5. DRAW PLOT BORDER ---
+  // --- 6. DRAW PLOT BORDER ---
   ctx.strokeStyle = "#000000";
   ctx.lineWidth = 1;
   ctx.strokeRect(marginLeft, marginTop, plotWidth, plotHeight);
 
-  // --- 6. DRAW AXIS TITLES ---
+  // --- 7. AXIS TITLES ---
   ctx.textAlign = "center";
   ctx.fillStyle = textColor;
   ctx.fillText("Real Axis (Re)", marginLeft + plotWidth / 2, height - 10);
@@ -319,16 +318,28 @@ export function drawNyquistPlot(
   ctx.fillText("Imaginary Axis (Im)", 0, 0);
   ctx.restore();
 
-  // --- 7. DRAW NYQUIST CURVE ---
+  // --- 8. DRAW NYQUIST LOCUS CURVE ---
   ctx.strokeStyle = strokeColor;
   ctx.lineWidth = 1.5;
   ctx.beginPath();
 
-  data.forEach((pt, idx) => {
+  let isDrawing = false;
+  validPoints.forEach((pt) => {
+    // Skip rendering segments that shoot off past plot limits
+    if (Math.abs(pt.real) > maxPlotLimit || Math.abs(pt.imag) > maxPlotLimit) {
+      isDrawing = false;
+      return;
+    }
+
     const x = mapX(pt.real);
     const y = mapY(pt.imag);
-    if (idx === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+
+    if (!isDrawing) {
+      ctx.moveTo(x, y);
+      isDrawing = true;
+    } else {
+      ctx.lineTo(x, y);
+    }
   });
 
   ctx.stroke();

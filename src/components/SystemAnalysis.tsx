@@ -24,12 +24,13 @@ import { MathView } from "./common/MathView";
 import { deriveTransferFunction } from "../utils/systemSolver";
 import type { SolverResult } from "../utils/systemSolver";
 import BodePlot from "./BodePlot";
+import NyquistPlot from "./NyquistPlot";
 import styles from "./SystemAnalysis.module.css";
 import { inverseLaplace } from "../utils/laplaceEngine";
 import type { InverseLaplaceResult } from "../utils/laplaceEngine";
 
 /**
- * * Node Type Registry
+ * Node Type Registry
  * Maps custom React Flow node identifiers to their respective React render components.
  */
 const nodeTypes = {
@@ -47,7 +48,7 @@ const defaultMarker = {
 };
 
 /**
- * * Initial Workspace Canvas Nodes
+ * Initial Workspace Canvas Nodes
  * Configured for System 2: 3rd-Order Multi-Loop Control System with Direct Feedthrough
  * H(s) = (0.5s^3 + 4s + 2) / (s^3 + s^2 + 4s + 2)
  */
@@ -106,7 +107,7 @@ const initialNodes: Node[] = [
 ];
 
 /**
- * * Initial Signal Flow Edges
+ * Initial Signal Flow Edges
  * Connects input u(t), multi-loop state integrators, feedthrough path, and output y(t).
  */
 const initialEdges: Edge[] = [
@@ -166,10 +167,10 @@ const initialEdges: Edge[] = [
 ];
 
 /**
- * * SystemAnalysis Component
+ * SystemAnalysis Component
  * Interactive block diagram canvas for building control systems.
  * Evaluates continuous signal flows, derives symbolic transfer functions H(s),
- * and delegates frequency response visualization to <BodePlot />.
+ * and delegates frequency response visualization to <BodePlot /> and <NyquistPlot />.
  */
 const SystemAnalysis: React.FC = () => {
   // ==========================================
@@ -220,6 +221,7 @@ const SystemAnalysis: React.FC = () => {
       setImpulseResult(null);
     }
   };
+
   // ==========================================
   // 3. CANVAS EVENT HANDLERS
   // ==========================================
@@ -294,7 +296,7 @@ const SystemAnalysis: React.FC = () => {
           gap: "20px",
         }}
       >
-        {/* LEFT COLUMN: React Flow Diagram, Derivation Output & Bode Diagram */}
+        {/* LEFT COLUMN: React Flow Diagram, Derivation Output, Bode & Nyquist Plots */}
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
           {/* Card 1: Interactive Canvas Wrapper */}
           <div
@@ -444,7 +446,14 @@ const SystemAnalysis: React.FC = () => {
             denominator={solverOutput.denominator}
           />
 
-          {/* Card 4: Impulse Response Computation */}
+          {/* Card 4: Reusable Standalone Nyquist Plot Component */}
+          <NyquistPlot
+            title={<MathView math={solverOutput.latexEquation} />}
+            numerator={solverOutput.numerator}
+            denominator={solverOutput.denominator}
+          />
+
+          {/* Card 5: Impulse Response Computation */}
           <div className="card" style={{ padding: "20px" }}>
             <div
               style={{
