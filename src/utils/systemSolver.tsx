@@ -55,7 +55,7 @@ interface Rational {
  * @property re | Real part of the complex number  
  * @property im | Imaginary part of the complex number
  */
-interface Complex {
+export interface Complex {
   re: number;
   im: number;
 }

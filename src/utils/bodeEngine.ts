@@ -57,7 +57,7 @@ interface Complex {
  * @example | evalPolyComplex([1, 2, 3], 1) => { re: 6, im: 2 }
  * @example | evalPolyComplex([1, 0, 1], 1) => { re: 0, im: 2 }
  */
-function evalPolyComplex(poly: Poly, omega: number): Complex {
+export function evalPolyComplex(poly: Poly, omega: number): Complex {
   let re = 0;
   let im = 0;
 
