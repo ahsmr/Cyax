@@ -1,4 +1,3 @@
-//import {evalPolyComplex} from './bodeEngine';
 import { evalPolyComplex } from "./bodeEngine";
 import type { Poly } from "./systemSolver";
 
@@ -68,28 +67,19 @@ export function calculateH(
   };
 }
 
-
-
 /**
  * Generates Nyquist plot data for a given transfer function defined by its numerator and denominator polynomials.
  * @param num             | Numerator polynomial coefficients (highest degree first)
  * @param den             | Denominator polynomial coefficients (highest degree first)
- * @param wMin            | Minimum frequency in rad/s (default: 0.01)
+ * @param wMin            | Minimum frequency in rad/s (default: 0.1)
  * @param wMax            | Maximum frequency in rad/s (default: 1000)
- * @param pointsPerDecade | Number of points to generate per decade (default: 50)
+ * @param pointsPerDecade | Number of points to generate per decade (default: 100)
  * @returns               | Array of NyquistPoint objects representing the Nyquist plot data
- *
- *
- * @example | generateNyquistData([1], [1, 1], 0.01, 1000, 50)
- *                  => [{frequency: 0.01, real: ..., imag: ..., amplitude: ..., phaseRad: ..., phaseDeg: ...}, ...]
- *
- * @example | generateNyquistData([1, 2], [1, 3, 2], 0.01, 1000, 50)
- *                  => [{frequency: 0.01, real: ..., imag: ..., amplitude: ..., phaseRad: ..., phaseDeg: ...}, ...]
  */
 export function generateNyquistData(
   num: number[],
   den: number[],
-  wMin = 0.001,
+  wMin = 0.1,
   wMax = 1000,
   pointsPerDecade = 100,
 ): NyquistPoint[] {
@@ -187,38 +177,39 @@ export function drawNyquistPlot(
 
   if (validPoints.length === 0) return;
 
-  let minRe = Infinity,
-    maxRe = -Infinity;
-  let minIm = Infinity,
-    maxIm = -Infinity;
+  // Initial bounds centered around critical point (-1, j0) and origin (0, 0)
+  let minRe = -1.2;
+  let maxRe = 0.2;
+  let minIm = -0.05;
+  let maxIm = 0.05;
 
+  // Dynamically calculate bounds based on reasonable magnitude points
   validPoints.forEach((pt) => {
-    if (pt.real < minRe) minRe = pt.real;
-    if (pt.real > maxRe) maxRe = pt.real;
-    if (pt.imag < minIm) minIm = pt.imag;
-    if (pt.imag > maxIm) maxIm = pt.imag;
+    // Filter out asymptotic spikes so they don't break auto-scaling
+    if (Math.abs(pt.real) <= 50 && Math.abs(pt.imag) <= 50) {
+      if (pt.real < minRe) minRe = pt.real;
+      if (pt.real > maxRe) maxRe = pt.real;
+      if (pt.imag < minIm) minIm = pt.imag;
+      if (pt.imag > maxIm) maxIm = pt.imag;
+    }
   });
 
-  // Ensure critical point (-1, j0) and origin (0, 0) are always visible inside viewport
-  minRe = Math.min(minRe, -1.5);
-  maxRe = Math.max(maxRe, 1.5);
-  minIm = Math.min(minIm, -1.5);
-  maxIm = Math.max(maxIm, 1.5);
+  // Always keep critical point (-1, j0) and origin (0, 0) in view
+  minRe = Math.min(minRe, -1.2);
+  maxRe = Math.max(maxRe, 0.2);
+  minIm = Math.min(minIm, -0.05);
+  maxIm = Math.max(maxIm, 0.05);
 
-  // Preserve 1:1 square aspect ratio
-  const spanRe = maxRe - minRe;
-  const spanIm = maxIm - minIm;
-  const maxSpan = Math.max(spanRe, spanIm);
+  // Add 10% padding to calculated bounds
+  const spanRe = maxRe - minRe || 1;
+  const spanIm = maxIm - minIm || 1;
 
-  const midRe = (minRe + maxRe) / 2;
-  const midIm = (minIm + maxIm) / 2;
+  const finalMinRe = minRe - spanRe * 0.1;
+  const finalMaxRe = maxRe + spanRe * 0.1;
+  const finalMinIm = minIm - spanIm * 0.1;
+  const finalMaxIm = maxIm + spanIm * 0.1;
 
-  const finalMinRe = midRe - maxSpan / 2;
-  const finalMaxRe = midRe + maxSpan / 2;
-  const finalMinIm = midIm - maxSpan / 2;
-  const finalMaxIm = midIm + maxSpan / 2;
-
-  // Coordinate mapping helpers
+  // Independent coordinate mapping helpers (decoupled X/Y scaling for optimal vertical zoom)
   const mapX = (re: number) =>
     marginLeft + ((re - finalMinRe) / (finalMaxRe - finalMinRe)) * plotWidth;
 
@@ -228,18 +219,21 @@ export function drawNyquistPlot(
     ((im - finalMinIm) / (finalMaxIm - finalMinIm)) * plotHeight;
 
   // --- 2. DYNAMIC GRID STEP CALCULATION ---
-  const targetTicks = 6;
-  const rawStep = maxSpan / targetTicks;
+  const calcGridStep = (span: number) => {
+    const rawStep = span / 6;
+    const exponent = Math.floor(Math.log10(rawStep));
+    const fraction = rawStep / Math.pow(10, exponent);
 
-  const exponent = Math.floor(Math.log10(rawStep));
-  const fraction = rawStep / Math.pow(10, exponent);
+    let niceFraction = 1;
+    if (fraction > 5) niceFraction = 10;
+    else if (fraction > 2) niceFraction = 5;
+    else if (fraction > 1) niceFraction = 2;
 
-  let niceFraction = 1;
-  if (fraction > 5) niceFraction = 10;
-  else if (fraction > 2) niceFraction = 5;
-  else if (fraction > 1) niceFraction = 2;
+    return niceFraction * Math.pow(10, exponent);
+  };
 
-  const gridStep = niceFraction * Math.pow(10, exponent);
+  const gridStepRe = calcGridStep(finalMaxRe - finalMinRe);
+  const gridStepIm = calcGridStep(finalMaxIm - finalMinIm);
 
   // --- 3. DRAW TITLE ---
   ctx.textAlign = "center";
@@ -247,10 +241,10 @@ export function drawNyquistPlot(
   ctx.fillText(title, marginLeft + plotWidth / 2, marginTop - 15);
 
   // --- 4. DRAW GRID & TICK LABELS ---
-  const startRe = Math.ceil(finalMinRe / gridStep) * gridStep;
-  const endRe = Math.floor(finalMaxRe / gridStep) * gridStep;
-  const startIm = Math.ceil(finalMinIm / gridStep) * gridStep;
-  const endIm = Math.floor(finalMaxIm / gridStep) * gridStep;
+  const startRe = Math.ceil(finalMinRe / gridStepRe) * gridStepRe;
+  const endRe = Math.floor(finalMaxRe / gridStepRe) * gridStepRe;
+  const startIm = Math.ceil(finalMinIm / gridStepIm) * gridStepIm;
+  const endIm = Math.floor(finalMaxIm / gridStepIm) * gridStepIm;
 
   ctx.strokeStyle = gridColor;
   ctx.lineWidth = 1;
@@ -258,7 +252,7 @@ export function drawNyquistPlot(
   // Vertical Grid Lines & X-Axis Labels
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
-  for (let r = startRe; r <= endRe + gridStep / 2; r += gridStep) {
+  for (let r = startRe; r <= endRe + gridStepRe / 2; r += gridStepRe) {
     const x = mapX(r);
     if (x >= marginLeft - 1 && x <= marginLeft + plotWidth + 1) {
       ctx.beginPath();
@@ -275,7 +269,7 @@ export function drawNyquistPlot(
   // Horizontal Grid Lines & Y-Axis Labels
   ctx.textAlign = "right";
   ctx.textBaseline = "middle";
-  for (let im = startIm; im <= endIm + gridStep / 2; im += gridStep) {
+  for (let im = startIm; im <= endIm + gridStepIm / 2; im += gridStepIm) {
     const y = mapY(im);
     if (y >= marginTop - 1 && y <= marginTop + plotHeight + 1) {
       ctx.beginPath();
@@ -349,6 +343,11 @@ export function drawNyquistPlot(
   ctx.restore();
 
   // --- 8. DRAW NYQUIST LOCUS CURVE ---
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(marginLeft, marginTop, plotWidth, plotHeight);
+  ctx.clip();
+
   ctx.strokeStyle = strokeColor;
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -365,4 +364,5 @@ export function drawNyquistPlot(
   });
 
   ctx.stroke();
+  ctx.restore();
 }
