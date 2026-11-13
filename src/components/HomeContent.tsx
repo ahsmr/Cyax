@@ -1,30 +1,36 @@
 import React from "react";
-import { Activity, Compass, Sliders, Settings2, Zap } from "lucide-react";
+import { Activity, Compass, Waves, Settings2, Zap } from "lucide-react";
 
 import { ModellingSection } from "./systems/ModellingSection";
 import { SystemAnalysisSection } from "./systems/SystemAnalysisSection";
 import { ControlDesignSection } from "./systems/ControlDesignSection";
 import { SamplingInterpolationSection } from "./systems/SamplingInterpolationSection";
+import type { ModuleType } from "./StandaloneTransferModule";
 
 /**
  * * HomeContentProps
  * Defines the props interface for the HomeContent dashboard landing view.
  * @property onInitialize - Callback function triggered when initializing a new system analysis tab.
+ * @property onOpenStandaloneModule - Callback function triggered when launching a standalone transfer function tab (Bode, Nyquist, or Impulse).
  */
 interface HomeContentProps {
   onInitialize: () => void;
+  onOpenStandaloneModule: (moduleType: ModuleType) => void;
 }
 
 /**
  * * HomeContent Component
  * The main launchpad / dashboard view for the Cyax application.
- * Serves as the central hub for quick-launching analysis engines (Bode, Root Locus, State-Space),
+ * Serves as the central hub for quick-launching analysis engines (Bode, Nyquist, Impulse Response),
  * accessing interactive core theory modules, and viewing engine health metrics.
  *
- * @param {HomeContentProps} props - Component properties containing execution callbacks.
+ * @param {HomeContentProps} props Component properties containing execution callbacks.
  * @returns {JSX.Element} The rendered dashboard layout.
  */
-export const HomeContent: React.FC<HomeContentProps> = ({ onInitialize }) => {
+export const HomeContent: React.FC<HomeContentProps> = ({
+  onInitialize,
+  onOpenStandaloneModule,
+}) => {
   return (
     <div className="home-container">
       {/* ==========================================
@@ -65,41 +71,58 @@ export const HomeContent: React.FC<HomeContentProps> = ({ onInitialize }) => {
           ========================================== */}
       <h2 className="section-label">Quick Analytics Engines</h2>
       <div className="card-grid">
-        <div className="card">
+        {/* Standalone Bode Plotter Card */}
+        <div
+          className="card"
+          onClick={() => onOpenStandaloneModule("bode")}
+          style={{ cursor: "pointer" }}
+        >
           <div>
             <div className="card-icon-wrapper icon-blue">
               <Activity size={16} />
             </div>
             <h3 className="card-title">Bode Plotter</h3>
             <p className="card-body">
-              Calculate gain margins (GM) and phase margins (PM) visually.
+              Calculate gain margins (GM) and phase margins (PM) visually from
+              transfer function polynomials.
             </p>
           </div>
           <span className="card-link">Launch Module →</span>
         </div>
 
-        <div className="card">
+        {/* Standalone Nyquist Diagram Card */}
+        <div
+          className="card"
+          onClick={() => onOpenStandaloneModule("nyquist")}
+          style={{ cursor: "pointer" }}
+        >
           <div>
             <div className="card-icon-wrapper icon-green">
               <Compass size={16} />
             </div>
-            <h3 className="card-title">Root Locus Map</h3>
+            <h3 className="card-title">Nyquist Diagram</h3>
             <p className="card-body">
-              Determine root trajectory lines dynamically with gain increments.
+              Plot complex frequency loci and inspect encirclements around the
+              (-1, j0) critical point.
             </p>
           </div>
           <span className="card-link">Launch Module →</span>
         </div>
 
-        <div className="card">
+        {/* Standalone Impulse Response Card */}
+        <div
+          className="card"
+          onClick={() => onOpenStandaloneModule("impulse")}
+          style={{ cursor: "pointer" }}
+        >
           <div>
             <div className="card-icon-wrapper icon-purple">
-              <Sliders size={16} />
+              <Waves size={16} />
             </div>
-            <h3 className="card-title">State-Space Model</h3>
+            <h3 className="card-title">Impulse Response h(t)</h3>
             <p className="card-body">
-              Extract transient characteristics and verify complete
-              observability.
+              Derive closed-form time-domain responses via inverse Laplace
+              transformation.
             </p>
           </div>
           <span className="card-link">Launch Module →</span>
