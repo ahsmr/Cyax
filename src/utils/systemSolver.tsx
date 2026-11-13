@@ -432,7 +432,7 @@ export function factorPolynomial(poly: Poly): Poly[] {
  * @param p | The polynomial to convert.
  * @returns | The LaTeX string representation of the polynomial.
  */
-function polyToLaTeX(p: Poly): string {
+export function polyToLaTeX(p: Poly): string {
   const cleanP = cleanPoly(p);
   const len = cleanP.length;
   if (len === 1 && cleanP[0] === 0) return "0";

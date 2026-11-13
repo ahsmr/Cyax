@@ -21,12 +21,6 @@ export const TopBar: React.FC<TopBarProps> = ({
     <header className="top-bar">
       {/* OS Simulation Window Buttons and branding */}
       <div className="window-controls">
-        <div className="mac-dots">
-          <span className="dot dot-red" />
-          <span className="dot dot-yellow" />
-          <span className="dot dot-green" />
-        </div>
-
         <div className="app-branding">
           <img
             src="/logo_transparent.png"

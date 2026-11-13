@@ -431,7 +431,7 @@ export function inverseLaplace(num: Poly, den: Poly): InverseLaplaceResult {
 
 /**
  * Generates impulse response data points for plotting.
- * @param num    | Coefficients of the numerator polynomial (from lowest degree to highest) 
+ * @param num    | Coefficients of the numerator polynomial (from lowest degree to highest)
  * @param den    | Coefficients of the denominator polynomial (from lowest degree to highest)
  * @param tMax   | Maximum time to evaluate the impulse response (seconds)
  * @param points | Number of points to generate between 0 and tMax

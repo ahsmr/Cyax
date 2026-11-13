@@ -19,7 +19,7 @@ import {
   IntegratorNode,
   SummingNode,
   GainNode,
-} from "./systems/CustomNodes";
+} from "./CustomNodes";
 import { MathView } from "./common/MathView";
 import { deriveTransferFunction } from "../utils/systemSolver";
 import type { SolverResult } from "../utils/systemSolver";
