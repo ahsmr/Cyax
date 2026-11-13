@@ -1,14 +1,9 @@
 import React from "react";
 import { Activity, Compass, Waves, Settings2, Zap } from "lucide-react";
-
-import { ModellingSection } from "./systems/ModellingSection";
-import { SystemAnalysisSection } from "./systems/SystemAnalysisSection";
-import { ControlDesignSection } from "./systems/ControlDesignSection";
-import { SamplingInterpolationSection } from "./systems/SamplingInterpolationSection";
 import type { ModuleType } from "./StandaloneTransferModule";
 
 /**
- * * HomeContentProps
+ * HomeContentProps
  * Defines the props interface for the HomeContent dashboard landing view.
  * @property onInitialize - Callback function triggered when initializing a new system analysis tab.
  * @property onOpenStandaloneModule - Callback function triggered when launching a standalone transfer function tab (Bode, Nyquist, or Impulse).
@@ -19,10 +14,10 @@ interface HomeContentProps {
 }
 
 /**
- * * HomeContent Component
+ * HomeContent Component
  * The main launchpad / dashboard view for the Cyax application.
- * Serves as the central hub for quick-launching analysis engines (Bode, Nyquist, Impulse Response),
- * accessing interactive core theory modules, and viewing engine health metrics.
+ * Serves as the central hub for launching the Block Diagram System Analyzer
+ * and standalone transfer function engines (Bode, Nyquist, Impulse Response).
  *
  * @param {HomeContentProps} props Component properties containing execution callbacks.
  * @returns {JSX.Element} The rendered dashboard layout.
@@ -48,28 +43,24 @@ export const HomeContent: React.FC<HomeContentProps> = ({
         {/* Main Title & Description */}
         <h1 className="hero-title">Control Systems Simulator</h1>
         <p className="hero-description">
-          An interactive, high-performance toolkit designed to trace
-          frequencies, design compensators, and map transfer functions. Perfect
-          for analyzing transient and frequency responses.
+          An interactive, high-performance toolkit designed to model block
+          diagrams, derive continuous state-space realizations, and evaluate
+          transfer function responses in time and frequency domains.
         </p>
 
         {/* Workspace Action Buttons */}
         <div className="hero-actions">
-          {/* * Spawns a new System Analysis workspace tab in App.tsx */}
+          {/* Spawns a new System Analysis workspace tab in App.tsx */}
           <button className="primary-btn" onClick={onInitialize}>
-            {" "}
             Initialize New System
           </button>
-
-          {/* TODO: Implement pre-configured control system templates picker */}
-          <button className="secondary-btn">Load Template</button>
         </div>
       </div>
 
       {/* ==========================================
-          2. QUICK ANALYTICS ENGINES (Feature Cards)
+          2. QUICK ANALYTICS ENGINES (Standalone Modules)
           ========================================== */}
-      <h2 className="section-label">Quick Analytics Engines</h2>
+      <h2 className="section-label">Standalone Transfer Function Engines</h2>
       <div className="card-grid">
         {/* Standalone Bode Plotter Card */}
         <div
@@ -83,8 +74,8 @@ export const HomeContent: React.FC<HomeContentProps> = ({
             </div>
             <h3 className="card-title">Bode Plotter</h3>
             <p className="card-body">
-              Calculate gain margins (GM) and phase margins (PM) visually from
-              transfer function polynomials.
+              Enter transfer function polynomials to compute magnitude (dB) and
+              unwrapped phase frequency responses.
             </p>
           </div>
           <span className="card-link">Launch Module →</span>
@@ -103,7 +94,7 @@ export const HomeContent: React.FC<HomeContentProps> = ({
             <h3 className="card-title">Nyquist Diagram</h3>
             <p className="card-body">
               Plot complex frequency loci and inspect encirclements around the
-              (-1, j0) critical point.
+              (-1, j0) critical stability point.
             </p>
           </div>
           <span className="card-link">Launch Module →</span>
@@ -121,8 +112,8 @@ export const HomeContent: React.FC<HomeContentProps> = ({
             </div>
             <h3 className="card-title">Impulse Response h(t)</h3>
             <p className="card-body">
-              Derive closed-form time-domain responses via inverse Laplace
-              transformation.
+              Derive closed-form time-domain responses via analytic inverse
+              Laplace transformation.
             </p>
           </div>
           <span className="card-link">Launch Module →</span>
@@ -130,54 +121,34 @@ export const HomeContent: React.FC<HomeContentProps> = ({
       </div>
 
       {/* ==========================================
-          3. CORE SYSTEMS THEORY MODULES (Interactive Collapsibles)
+          3. STATUS PANEL (Engine Diagnostics & Health)
           ========================================== */}
-      <h2 className="section-label" style={{ marginTop: "28px" }}>
-        Core Systems Theory Modules
-      </h2>
-
-      {/* 
-        ? Interactive accordions/collapsible panels housing state-space equations,
-        ? transfer function derivation, control design, and discretization tools.
-      */}
-      <div className="systems-interactive-container">
-        <ModellingSection />
-        <SystemAnalysisSection />
-        <ControlDesignSection />
-        <SamplingInterpolationSection />
-      </div>
-
-      {/* ==========================================
-          4. STATUS PANEL (Engine Diagnostics & Health)
-          ========================================== */}
-      <div className="status-panel" style={{ marginTop: "24px" }}>
+      <div className="status-panel" style={{ marginTop: "28px" }}>
         <div className="status-header">
           <div className="status-header-title">
             <Settings2 size={14} style={{ color: "var(--sky-blue)" }} />
             <span>Core Calculator Engines</span>
           </div>
-          <span className="status-header-subtitle">Idle Thread Status</span>
+          <span className="status-header-subtitle">Offline LTI Runtime</span>
         </div>
 
-        {/* Engine Performance Metrics Grid */}
-
-        {/* TODO: Replace hardcoded values with dynamic engine metrics from state or context*/}
+        {/* Engine Capabilities Grid */}
         <div className="status-metrics-grid">
           <div className="metric-box">
-            <span className="metric-label">Engine Memory</span>
-            <span className="metric-value cyan">18.4 MB</span>
+            <span className="metric-label">State-Space Solver</span>
+            <span className="metric-value cyan">Continuous LTI</span>
           </div>
           <div className="metric-box">
-            <span className="metric-label">Thread Safety</span>
-            <span className="metric-value green">Nominal</span>
+            <span className="metric-label">Symbolic Reduction</span>
+            <span className="metric-value green">Euclidean GCD</span>
           </div>
           <div className="metric-box">
-            <span className="metric-label">Active Modules</span>
-            <span className="metric-value purple">4 Active</span>
+            <span className="metric-label">Standalone Engines</span>
+            <span className="metric-value purple">3 Active</span>
           </div>
           <div className="metric-box">
-            <span className="metric-label">Workspace Synced</span>
-            <span className="metric-value amber">Standby</span>
+            <span className="metric-label">Execution Mode</span>
+            <span className="metric-value amber">Local / Offline</span>
           </div>
         </div>
       </div>

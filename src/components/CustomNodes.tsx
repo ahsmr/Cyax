@@ -1,6 +1,6 @@
 import React from "react";
 import { Handle, Position } from "@xyflow/react";
-import { MathView } from "../common/MathView";
+import { MathView } from "./common/MathView";
 
 const nodeStyle: React.CSSProperties = {
   padding: "10px 14px",
