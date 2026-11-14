@@ -8,6 +8,8 @@ import NyquistPlot from "./NyquistPlot";
 import { inverseLaplace } from "../utils/laplaceEngine";
 import type { InverseLaplaceResult } from "../utils/laplaceEngine";
 
+import packageJson from "../../package.json";
+
 export type ModuleType = "bode" | "nyquist" | "impulse";
 
 export interface StandaloneTransferModuleProps {
@@ -101,7 +103,9 @@ export const StandaloneTransferModule: React.FC<
           <Activity size={20} style={{ color: "var(--sky-blue)" }} />
           <span>{MODULE_TITLES[moduleType]}</span>
         </div>
-        <span className="version-badge">LTI Engine v1.0.2</span>
+        <span className="version-badge">
+          LTI Engine v{packageJson.engineVersion}
+        </span>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>

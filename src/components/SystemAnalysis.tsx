@@ -1,3 +1,4 @@
+import packageJson from "../../package.json";
 import React, { useState, useCallback } from "react";
 import {
   ReactFlow,
@@ -285,7 +286,9 @@ const SystemAnalysis: React.FC = () => {
           <Activity size={20} style={{ color: "var(--sky-blue)" }} />
           <span>Interactive System Canvas & Transfer Function Analysis</span>
         </div>
-        <span className="version-badge">LTI Engine v1.5.0</span>
+        <span className="version-badge">
+          LTI Engine v{packageJson.engineVersion}
+        </span>
       </div>
 
       {/* --- MAIN GRID LAYOUT: Canvas + Control Panel --- */}
