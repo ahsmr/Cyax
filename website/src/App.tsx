@@ -25,7 +25,7 @@ const GITHUB_PROFILE_URL = "https://github.com/ahsmr";
 
 export function App() {
   const [showSimulator, setShowSimulator] = useState(
-    () => window.location.hash === "#app"
+    () => window.location.hash === "#app",
   );
 
   // Sync simulator state with browser URL hash (#app) so browser Back button works
@@ -39,7 +39,7 @@ export function App() {
       window.history.pushState(
         { simulator: false },
         "",
-        window.location.pathname
+        window.location.pathname,
       );
     }
     setShowSimulator(false);
@@ -55,7 +55,9 @@ export function App() {
 
   // Unlock page scrolling on the landing page and lock it when the simulator is open
   useEffect(() => {
-    document.documentElement.style.overflowY = showSimulator ? "hidden" : "auto";
+    document.documentElement.style.overflowY = showSimulator
+      ? "hidden"
+      : "auto";
     document.body.style.overflowY = showSimulator ? "hidden" : "auto";
     document.body.style.height = showSimulator ? "100vh" : "auto";
 
@@ -293,8 +295,8 @@ export function App() {
               <span className="step-num">STEP 01</span>
               <h3>Launch Online or Install</h3>
               <p>
-                Click <strong>Launch Online Simulator</strong> above to run
-                Cyax directly in your browser, or download{" "}
+                Click <strong>Launch Online Simulator</strong> above to run Cyax
+                directly in your browser, or download{" "}
                 <code>Cyax-Setup-0.6.0.exe</code> for offline Windows use.
               </p>
             </div>
@@ -305,7 +307,8 @@ export function App() {
               <p>
                 Click <strong>Initialize New System</strong> to wire a block
                 diagram, or open a standalone engine and enter ascending arrays
-                like <code>[2, 4, 0, 0.5]</code> for <code>2 + 4s + 0.5s³</code>.
+                like <code>[2, 4, 0, 0.5]</code> for <code>2 + 4s + 0.5s³</code>
+                .
               </p>
             </div>
 
@@ -353,7 +356,8 @@ export function App() {
             >
               <div>
                 <h3 style={{ margin: 0, fontSize: "1.2rem" }}>
-                  Amir Hossein Saber Moghaddam Ranjbar — Creator & Lead Developer
+                  Amir Hossein Saber Moghaddam Ranjbar — Creator & Lead
+                  Developer
                 </h3>
                 <span
                   style={{
@@ -379,10 +383,10 @@ export function App() {
             </div>
 
             <p>
-              Cyax was created to help engineering students verify continuous-time
-              state-space realizations, symbolic transfer function reductions,
-              and frequency-domain plots without wrestling with heavy toolbox
-              setups or black-box numerical outputs.
+              Cyax was created to help engineering students verify
+              continuous-time state-space realizations, symbolic transfer
+              function reductions, and frequency-domain plots without wrestling
+              with heavy toolbox setups or black-box numerical outputs.
             </p>
 
             <p>
@@ -401,8 +405,8 @@ export function App() {
       <footer className="footer">
         <div className="container">
           <p>
-            © {new Date().getFullYear()} ahsmr — Cyax Control Systems
-            Simulator • Released under the MIT License •{" "}
+            © {new Date().getFullYear()} ahsmr — Cyax Control Systems Simulator
+            • Released under the MIT License •{" "}
             <a
               href={GITHUB_REPO_URL}
               target="_blank"
