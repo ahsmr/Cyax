@@ -11,15 +11,20 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@xyflow/react": "13.0.1",
+    "katex": "0.19.1",
     "lucide-react": "1.74.0",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "react-katex": "3.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/katex": "0.16.8",
     "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@types/react-katex": "3.0.4",
     "@vitejs/plugin-react": "^6.1.2",
     "eslint": "^10.14.0",
     "eslint-plugin-react-hooks": "^7.1.1",

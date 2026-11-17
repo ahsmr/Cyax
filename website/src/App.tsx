@@ -1,19 +1,18 @@
 import {
   Activity,
+  Code2,
   Compass,
   Cpu,
   Download,
-  ExternalLink,
   GitBranch,
   Layers,
   Waves,
   Zap,
 } from "lucide-react";
 
-// Update these two URLs after deploying to Vercel and creating your GitHub Release
-const WEB_APP_URL = "https://cyax-app.vercel.app";
+// Update this URL to match your GitHub Release asset filename
 const WINDOWS_EXE_URL =
-  "https://github.com/ahsmr/Cyax/releases/latest/download/Cyax-Setup-0.2.0.exe";
+  "https://github.com/ahsmr/Cyax/releases/latest/download/Cyax-Setup-0.6.0.exe";
 const GITHUB_REPO_URL = "https://github.com/ahsmr/Cyax";
 
 export function App() {
@@ -41,12 +40,10 @@ export function App() {
               GitHub
             </a>
             <a
-              href={WEB_APP_URL}
-              target="_blank"
-              rel="noreferrer"
+              href={WINDOWS_EXE_URL}
               style={{ color: "var(--sky-blue)", fontWeight: 600 }}
             >
-              Open Web App →
+              Download .exe ↓
             </a>
           </nav>
         </div>
@@ -59,7 +56,7 @@ export function App() {
         <div className="container">
           <div className="badge">
             <Zap size={13} />
-            <span>Continuous-Time LTI Control Systems Engine</span>
+            <span>Offline Desktop Control Systems Simulator</span>
           </div>
 
           <h1>
@@ -69,26 +66,27 @@ export function App() {
           </h1>
 
           <p>
-            Cyax is an interactive control systems simulator and symbolic solver.
-            Construct multi-loop block diagrams, extract continuous state-space
-            matrices (A, B, C, D), and evaluate Bode, Nyquist, and analytic
-            impulse responses in real time.
+            Cyax is a lightweight, offline desktop simulator and symbolic solver
+            for continuous-time LTI control systems. Construct multi-loop block
+            diagrams, extract state-space matrices (A, B, C, D), and evaluate
+            Bode, Nyquist, and analytic impulse responses without setup
+            overhead.
           </p>
 
           <div className="cta-group">
-            <a
-              href={WEB_APP_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="btn-primary"
-            >
-              <ExternalLink size={18} />
-              Launch Live Web App
-            </a>
-
-            <a href={WINDOWS_EXE_URL} className="btn-secondary">
+            <a href={WINDOWS_EXE_URL} className="btn-primary">
               <Download size={18} />
               Download for Windows (.exe)
+            </a>
+
+            <a
+              href={GITHUB_REPO_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="btn-secondary"
+            >
+              <Code2 size={18} />
+              View on GitHub
             </a>
           </div>
         </div>
@@ -101,8 +99,8 @@ export function App() {
         <div className="container">
           <h2 className="section-title">Built for Control Engineering</h2>
           <p className="section-subtitle">
-            Pure client-side symbolic and numerical engines with KaTeX math
-            rendering.
+            Step-by-step symbolic verification and interactive visualization
+            with KaTeX rendering.
           </p>
 
           <div className="grid-3">
@@ -113,7 +111,7 @@ export function App() {
               <h3>Interactive Block Canvas</h3>
               <p>
                 Connect integrators (1/s), gain blocks, and summing junctions
-                with negative feedback loops on a drag-and-drop canvas[cite: 6].
+                with negative feedback loops on a drag-and-drop canvas.
               </p>
             </div>
 
@@ -125,7 +123,7 @@ export function App() {
               <p>
                 Automatically constructs (A, B, C, D) matrices, checks
                 controllability and observability, and reduces H(s) via
-                Euclidean GCD[cite: 6].
+                Euclidean GCD.
               </p>
             </div>
 
@@ -136,7 +134,7 @@ export function App() {
               <h3>Bode Frequency Plotter</h3>
               <p>
                 Sweep logarithmic frequencies to plot magnitude (dB) and
-                unwrapped phase with animated sweeps and gain/phase margins[cite: 3, 5, 6].
+                unwrapped phase with animated sweeps and gain/phase margins.
               </p>
             </div>
 
@@ -147,7 +145,7 @@ export function App() {
               <h3>Nyquist Locus Diagram</h3>
               <p>
                 Map complex frequency trajectories in the Cartesian plane and
-                inspect encirclements around the (-1, j0) critical point[cite: 3, 6].
+                inspect encirclements around the (-1, j0) critical point.
               </p>
             </div>
 
@@ -158,7 +156,7 @@ export function App() {
               <h3>Analytic Impulse Response h(t)</h3>
               <p>
                 Compute closed-form inverse Laplace transforms into Dirac
-                impulses, real exponentials, and damped harmonic terms[cite: 6].
+                impulses, real exponentials, and damped harmonic terms.
               </p>
             </div>
 
@@ -169,7 +167,7 @@ export function App() {
               <h3>Standalone Poly Sandbox</h3>
               <p>
                 Bypass block diagrams and enter raw numerator and denominator
-                polynomials directly to inspect frequency and time responses[cite: 3, 6].
+                polynomials directly to inspect frequency and time responses.
               </p>
             </div>
           </div>
@@ -181,38 +179,38 @@ export function App() {
          ========================================== */}
       <section id="quickstart" className="section">
         <div className="container">
-          <h2 className="section-title">How to Use Cyax</h2>
+          <h2 className="section-title">How to Get Started</h2>
           <p className="section-subtitle">
-            Run directly in your browser or install the offline desktop app.
+            Install once and run completely offline on Windows.
           </p>
 
           <div className="steps-grid">
             <div className="card">
               <span className="step-num">STEP 01</span>
-              <h3>Choose a Workspace</h3>
+              <h3>Download & Install</h3>
               <p>
-                Click <strong>Initialize New System</strong> to open the visual
-                block diagram builder, or pick a standalone Bode, Nyquist, or
-                Impulse module[cite: 3].
+                Download <code>Cyax-Setup-0.6.0.exe</code> from the button above
+                and run the installer—no MATLAB toolboxes or external
+                dependencies required.
               </p>
             </div>
 
             <div className="card">
               <span className="step-num">STEP 02</span>
-              <h3>Define System or Polynomials</h3>
+              <h3>Build or Enter Polynomials</h3>
               <p>
-                Wire blocks on the canvas or enter ascending polynomial arrays
-                like <code>[2, 4, 0, 0.5]</code> for{" "}
-                <code>2 + 4s + 0.5s³</code> with live KaTeX verification[cite: 3].
+                Click <strong>Initialize New System</strong> to wire a block
+                diagram, or open a standalone engine and enter ascending arrays
+                like <code>[2, 4, 0, 0.5]</code> for <code>2 + 4s + 0.5s³</code>.
               </p>
             </div>
 
             <div className="card">
               <span className="step-num">STEP 03</span>
-              <h3>Solve & Visualize</h3>
+              <h3>Verify Step-by-Step</h3>
               <p>
-                Run the symbolic solver to inspect step-by-step derivations,
-                stability eigenvalues, and interactive frequency plots[cite: 3, 6].
+                Inspect extracted (A, B, C, D) matrices, pole-zero
+                cancellations, ODE forms, and interactive Bode/Nyquist plots.
               </p>
             </div>
           </div>
@@ -225,8 +223,7 @@ export function App() {
       <footer className="footer">
         <div className="container">
           <p>
-            Cyax Control Systems Simulator — Open Source under Apache-2.0
-            License •{" "}
+            Cyax Control Systems Simulator — Open Source under MIT License •{" "}
             <a
               href={GITHUB_REPO_URL}
               target="_blank"
