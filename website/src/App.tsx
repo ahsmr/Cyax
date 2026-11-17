@@ -361,7 +361,8 @@ export function App() {
             >
               <div>
                 <h3 style={{ margin: 0, fontSize: "1.2rem" }}>
-                  Amir Hossein Saber Moghaddam Ranjbar — Creator & Lead Developer
+                  Amir Hossein Saber Moghaddam Ranjbar — Creator & Lead
+                  Developer
                 </h3>
                 <span
                   style={{
