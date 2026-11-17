@@ -13,10 +13,13 @@ import {
   Zap,
 } from "lucide-react";
 
+// Import KaTeX stylesheet (prevents duplicated raw math text & missing fraction bars)
+import "katex/dist/katex.min.css";
 // Import your actual Cyax app directly from the root src/ folder
 import CyaxApp from "../../src/App";
-// Import your root app CSS
+// Import your root app styles
 import "../../src/index.css";
+import "../../src/App.css";
 
 // Update these constants with your release link and personal contact details
 const WINDOWS_EXE_URL =
@@ -27,7 +30,7 @@ const CONTACT_EMAIL = "ahsmr.dev@gmail.com";
 
 export function App() {
   const [showSimulator, setShowSimulator] = useState(
-    () => window.location.hash === "#app",
+    () => window.location.hash === "#app"
   );
 
   // Sync simulator state with browser URL hash (#app) so browser Back button works
@@ -41,7 +44,7 @@ export function App() {
       window.history.pushState(
         { simulator: false },
         "",
-        window.location.pathname,
+        window.location.pathname
       );
     }
     setShowSimulator(false);
@@ -57,9 +60,7 @@ export function App() {
 
   // Unlock page scrolling on the landing page and lock it when the simulator is open
   useEffect(() => {
-    document.documentElement.style.overflowY = showSimulator
-      ? "hidden"
-      : "auto";
+    document.documentElement.style.overflowY = showSimulator ? "hidden" : "auto";
     document.body.style.overflowY = showSimulator ? "hidden" : "auto";
     document.body.style.height = showSimulator ? "100vh" : "auto";
 
@@ -108,7 +109,7 @@ export function App() {
   }
 
   return (
-    <div>
+    <div className="cyax-landing">
       {/* ==========================================
           1. NAVIGATION BAR
          ========================================== */}
@@ -417,7 +418,7 @@ export function App() {
       <footer className="footer">
         <div className="container">
           <p>
-            © {new Date().getFullYear()} Amir S. — Cyax Control Systems
+            © {new Date().getFullYear()} ahsmr — Cyax Control Systems
             Simulator • Released under the MIT License •{" "}
             <a
               href={GITHUB_REPO_URL}
