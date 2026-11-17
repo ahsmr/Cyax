@@ -8,6 +8,7 @@ import {
   ExternalLink,
   GitBranch,
   Layers,
+  Mail,
   Waves,
   Zap,
 } from "lucide-react";
@@ -17,11 +18,12 @@ import CyaxApp from "../../src/App";
 // Import your root app CSS
 import "../../src/index.css";
 
-// Update this URL to match your GitHub Release asset filename
+// Update these constants with your release link and personal contact details
 const WINDOWS_EXE_URL =
   "https://github.com/ahsmr/Cyax/releases/latest/download/Cyax-Setup-0.6.0.exe";
 const GITHUB_REPO_URL = "https://github.com/ahsmr/Cyax";
 const GITHUB_PROFILE_URL = "https://github.com/ahsmr";
+const CONTACT_EMAIL = "ahsmr.dev@gmail.com";
 
 export function App() {
   const [showSimulator, setShowSimulator] = useState(
@@ -351,13 +353,12 @@ export function App() {
                 justifyContent: "space-between",
                 alignItems: "center",
                 flexWrap: "wrap",
-                gap: "8px",
+                gap: "12px",
               }}
             >
               <div>
                 <h3 style={{ margin: 0, fontSize: "1.2rem" }}>
-                  Amir Hossein Saber Moghaddam Ranjbar — Creator & Lead
-                  Developer
+                  Amir S. — Creator & Lead Developer
                 </h3>
                 <span
                   style={{
@@ -370,16 +371,27 @@ export function App() {
                 </span>
               </div>
 
-              <a
-                href={GITHUB_PROFILE_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="btn-secondary"
-                style={{ padding: "8px 14px", fontSize: "0.85rem" }}
-              >
-                <Code2 size={16} />
-                @ahsmr on GitHub
-              </a>
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                <a
+                  href={`mailto:${CONTACT_EMAIL}?subject=Cyax%20Control%20Systems%20Simulator`}
+                  className="btn-secondary"
+                  style={{ padding: "8px 14px", fontSize: "0.85rem" }}
+                >
+                  <Mail size={16} />
+                  {CONTACT_EMAIL}
+                </a>
+
+                <a
+                  href={GITHUB_PROFILE_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn-secondary"
+                  style={{ padding: "8px 14px", fontSize: "0.85rem" }}
+                >
+                  <Code2 size={16} />
+                  @ahsmr
+                </a>
+              </div>
             </div>
 
             <p>
@@ -405,8 +417,8 @@ export function App() {
       <footer className="footer">
         <div className="container">
           <p>
-            © {new Date().getFullYear()} ahsmr — Cyax Control Systems Simulator
-            • Released under the MIT License •{" "}
+            © {new Date().getFullYear()} Amir S. — Cyax Control Systems
+            Simulator • Released under the MIT License •{" "}
             <a
               href={GITHUB_REPO_URL}
               target="_blank"
@@ -414,6 +426,13 @@ export function App() {
               style={{ color: "var(--sky-blue)" }}
             >
               ahsmr/Cyax
+            </a>{" "}
+            •{" "}
+            <a
+              href={`mailto:${CONTACT_EMAIL}?subject=Cyax%20Control%20Systems%20Simulator`}
+              style={{ color: "var(--sky-blue)" }}
+            >
+              {CONTACT_EMAIL}
             </a>
           </p>
           <p style={{ fontSize: "0.8rem", marginTop: "8px", opacity: 0.75 }}>
