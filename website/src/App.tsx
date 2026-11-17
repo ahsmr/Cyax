@@ -30,7 +30,7 @@ const CONTACT_EMAIL = "ahsmr.dev@gmail.com";
 
 export function App() {
   const [showSimulator, setShowSimulator] = useState(
-    () => window.location.hash === "#app"
+    () => window.location.hash === "#app",
   );
 
   // Sync simulator state with browser URL hash (#app) so browser Back button works
@@ -44,7 +44,7 @@ export function App() {
       window.history.pushState(
         { simulator: false },
         "",
-        window.location.pathname
+        window.location.pathname,
       );
     }
     setShowSimulator(false);
@@ -60,7 +60,9 @@ export function App() {
 
   // Unlock page scrolling on the landing page and lock it when the simulator is open
   useEffect(() => {
-    document.documentElement.style.overflowY = showSimulator ? "hidden" : "auto";
+    document.documentElement.style.overflowY = showSimulator
+      ? "hidden"
+      : "auto";
     document.body.style.overflowY = showSimulator ? "hidden" : "auto";
     document.body.style.height = showSimulator ? "100vh" : "auto";
 
@@ -418,8 +420,8 @@ export function App() {
       <footer className="footer">
         <div className="container">
           <p>
-            © {new Date().getFullYear()} ahsmr — Cyax Control Systems
-            Simulator • Released under the MIT License •{" "}
+            © {new Date().getFullYear()} ahsmr — Cyax Control Systems Simulator
+            • Released under the MIT License •{" "}
             <a
               href={GITHUB_REPO_URL}
               target="_blank"
