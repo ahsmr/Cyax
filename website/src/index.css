@@ -2,6 +2,7 @@ html {
   margin: 0;
   background-color: #020617;
   overflow-y: auto;
+  overscroll-behavior-y: none;
 }
 
 body {
