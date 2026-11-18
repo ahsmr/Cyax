@@ -113,20 +113,13 @@ export function App() {
   return (
     <div className="cyax-landing">
       {/* ==========================================
-          1. NAVIGATION BAR
+1. NAVIGATION BAR
          ========================================== */}
       <header className="navbar">
-        <div className="container nav-inner">
-          <div className="brand">
-            <img
-              src="/logo_square_transparent.png"
-              alt="Cyax Logo"
-              width={28}
-              height={28}
-            />
-            <span>Cyax</span>
-          </div>
-
+        <div
+          className="container nav-inner"
+          style={{ justifyContent: "flex-end" }}
+        >
           <nav className="nav-links">
             <a href="#features">Engines</a>
             <a href="#quickstart">Quick Start</a>
@@ -153,10 +146,23 @@ export function App() {
       </header>
 
       {/* ==========================================
-          2. HERO SECTION
+2. HERO SECTION
          ========================================== */}
       <section className="hero">
         <div className="container">
+          <div style={{ marginBottom: "24px" }}>
+            <img
+              src="/logo_square_transparent.png"
+              alt="Cyax Logo"
+              style={{
+                width: "160px",
+                height: "160px",
+                objectFit: "contain",
+                display: "inline-block",
+              }}
+            />
+          </div>
+
           <div className="badge">
             <Zap size={13} />
             <span>Continuous-Time Control Systems Simulator</span>
@@ -204,7 +210,7 @@ export function App() {
       </section>
 
       {/* ==========================================
-          3. CORE ENGINES SHOWCASE
+3. CORE ENGINES SHOWCASE
          ========================================== */}
       <section id="features" className="section">
         <div className="container">
@@ -286,7 +292,7 @@ export function App() {
       </section>
 
       {/* ==========================================
-          4. QUICK START GUIDE
+4. QUICK START GUIDE
          ========================================== */}
       <section id="quickstart" className="section">
         <div className="container">
@@ -330,7 +336,7 @@ export function App() {
       </section>
 
       {/* ==========================================
-          5. ABOUT THE AUTHOR & PROJECT
+5. ABOUT THE AUTHOR & PROJECT
          ========================================== */}
       <section id="about" className="section">
         <div className="container">
@@ -416,13 +422,13 @@ export function App() {
       </section>
 
       {/* ==========================================
-          6. FOOTER
+6. FOOTER
          ========================================== */}
       <footer className="footer">
         <div className="container">
           <p>
             © {new Date().getFullYear()} ahsmr — Cyax Control Systems Simulator
-            • Released under the MIT License •{" "}
+            - Released under the MIT License •{" "}
             <a
               href={GITHUB_REPO_URL}
               target="_blank"
