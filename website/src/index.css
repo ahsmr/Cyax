@@ -1,8 +1,7 @@
 html {
   margin: 0;
-  background-color: #0c1936;
+  background-color: #020617;
   overflow-y: auto;
-  overscroll-behavior-y: none;
 }
 
 body {
@@ -19,6 +18,7 @@ body {
   --text-muted: #94a3b8;
 
   min-height: 100vh;
+  padding-top: 16px;
   background-color: var(--bg-dark);
   background-image:
     radial-gradient(ellipse 80% 45% at 50% 0%, rgba(56, 189, 248, 0.16), transparent 65%),
@@ -51,55 +51,121 @@ body {
   padding: 0 24px;
 }
 
-/* Navbar — richer slate-indigo gradient with cyan accent edge */
+/* ==========================================
+   MODERN FLOATING GLASS NAVBAR
+   ========================================== */
 .cyax-landing .navbar {
   position: sticky;
-  top: 0;
+  top: 16px;
   z-index: 50;
-  background: linear-gradient(
-    180deg,
-    #0c1936 0%,
-    #071024 100%
-  );
-  border-top: 2px solid rgba(56, 189, 248, 0.45);
-  border-bottom: 1px solid rgba(56, 189, 248, 0.28);
-  box-shadow:
-    0 8px 30px rgba(2, 6, 23, 0.85),
-    0 1px 0 rgba(56, 189, 248, 0.12);
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 12px;
 }
 
 .cyax-landing .nav-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
+  height: 56px;
+  padding: 0 12px 0 20px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    180deg,
+    rgba(15, 28, 56, 0.82) 0%,
+    rgba(8, 16, 36, 0.88) 100%
+  );
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(56, 189, 248, 0.24);
+  box-shadow:
+    0 12px 32px rgba(2, 6, 23, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
-.cyax-landing .brand {
-  display: flex;
+.cyax-landing .nav-status {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  font-weight: 700;
-  font-size: 1.15rem;
-  letter-spacing: -0.02em;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #94a3b8;
+  letter-spacing: 0.01em;
+}
+
+.cyax-landing .nav-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: #38bdf8;
+  box-shadow: 0 0 10px #38bdf8;
 }
 
 .cyax-landing .nav-links {
   display: flex;
   align-items: center;
-  gap: 24px;
-  font-size: 14px;
+  gap: 6px;
+  font-size: 13.5px;
   font-weight: 500;
   color: #cbd5e1;
 }
 
+.cyax-landing .nav-links a {
+  padding: 6px 14px;
+  border-radius: 9999px;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
 .cyax-landing .nav-links a:hover {
-  color: var(--sky-blue);
+  color: #ffffff;
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.cyax-landing .nav-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 6px;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  background: linear-gradient(
+    135deg,
+    rgba(56, 189, 248, 0.2) 0%,
+    rgba(14, 165, 233, 0.12) 100%
+  );
+  color: #7dd3fc;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: all 0.18s ease;
+}
+
+.cyax-landing .nav-cta-btn:hover {
+  background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+  color: #020617;
+  border-color: #38bdf8;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+}
+
+@media (max-width: 640px) {
+  .cyax-landing .nav-status {
+    display: none;
+  }
+  .cyax-landing .nav-inner {
+    justify-content: center;
+    padding: 0 10px;
+  }
+  .cyax-landing .nav-links a {
+    padding: 6px 10px;
+    font-size: 12.5px;
+  }
 }
 
 /* Hero */
 .cyax-landing .hero {
-  padding: 88px 0 64px;
+  padding: 72px 0 64px;
   text-align: center;
 }
 

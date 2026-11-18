@@ -21,6 +21,8 @@ import CyaxApp from "../../src/App";
 import "../../src/index.css";
 import "../../src/App.css";
 
+import rootPkg from "../../package.json"
+
 // Update these constants with your release link and personal contact details
 const WINDOWS_EXE_URL =
   "https://github.com/ahsmr/Cyax/releases/latest/download/Cyax-Setup-0.6.0.exe";
@@ -116,10 +118,12 @@ export function App() {
 1. NAVIGATION BAR
          ========================================== */}
       <header className="navbar">
-        <div
-          className="container nav-inner"
-          style={{ justifyContent: "flex-end" }}
-        >
+        <div className="nav-inner">
+          <div className="nav-status">
+            <span className="nav-status-dot" />
+            <span>{rootPkg.version} • LTI Symbolic Engine</span>
+          </div>
+
           <nav className="nav-links">
             <a href="#features">Engines</a>
             <a href="#quickstart">Quick Start</a>
@@ -130,14 +134,7 @@ export function App() {
             <button
               type="button"
               onClick={openSimulator}
-              style={{
-                background: "none",
-                border: "none",
-                color: "var(--sky-blue)",
-                fontWeight: 600,
-                cursor: "pointer",
-                fontSize: "14px",
-              }}
+              className="nav-cta-btn"
             >
               Open Online App →
             </button>
