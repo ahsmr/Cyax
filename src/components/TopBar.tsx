@@ -23,7 +23,7 @@ export const TopBar: React.FC<TopBarProps> = ({
       <div className="window-controls">
         <div className="app-branding">
           <img
-            src="/logo_transparent.png"
+            src="/logo_square_transparent.png"
             alt="CYAX Logo"
             className="app-logo-img"
           />
