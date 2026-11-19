@@ -1079,16 +1079,15 @@ function getEigenvalues(
   A: number[][],
   maxIterations = 1000,
   tolerance = EPSILON,
-): number[] {
+): Complex[] {
   const n = A.length;
-  // Deep clone A to avoid mutating the original matrix
+  if (n === 0) return [];
   let Ak = A.map((row) => [...row]);
 
   for (let iter = 0; iter < maxIterations; iter++) {
-    // 1. Perform QR decomposition on Ak
     const { Q, R } = householderQR(Ak);
 
-    // 2. Recombine: A_{k+1} = R * Q
+    // Recombine: A_{k+1} = R * Q
     const A_next: number[][] = Array.from({ length: n }, () =>
       new Array(n).fill(0),
     );
@@ -1102,25 +1101,54 @@ function getEigenvalues(
       }
     }
 
-    // 3. Check for convergence (off-diagonal norm/magnitude)
-    let offDiagonalSum = 0;
-    for (let i = 0; i < n; i++) {
-      for (let j = 0; j < i; j++) {
-        offDiagonalSum += Math.abs(A_next[i][j]);
+    // Check convergence to quasi-upper-triangular (Real Schur) form:
+    // Every subdiagonal entry Ak[i][i-1] must either be ~0 (1x1 real block)
+    // OR be followed by a ~0 subdiagonal entry Ak[i+1][i] (2x2 complex block).
+    let converged = true;
+    let i = n - 1;
+    while (i > 0) {
+      if (Math.abs(A_next[i][i - 1]) < tolerance) {
+        i -= 1; // 1x1 block converged
+      } else if (i > 1 && Math.abs(A_next[i - 1][i - 2]) < tolerance) {
+        i -= 2; // 2x2 block isolated
+      } else {
+        converged = false;
+        break;
       }
     }
 
     Ak = A_next;
-
-    if (offDiagonalSum < tolerance) {
-      break;
-    }
+    if (converged) break;
   }
 
-  // Extract diagonal elements (eigenvalues)
-  const eigenvalues: number[] = [];
-  for (let i = 0; i < n; i++) {
-    eigenvalues.push(Ak[i][i]);
+  // Extract eigenvalues from the 1x1 and 2x2 diagonal blocks of Ak
+  const eigenvalues: Complex[] = [];
+  let i = 0;
+  while (i < n) {
+    if (i < n - 1 && Math.abs(Ak[i + 1][i]) >= tolerance) {
+      // 2x2 block [[a, b], [c, d]] -> solve lambda^2 - (a+d)*lambda + (ad - bc) = 0
+      const a = Ak[i][i];
+      const b = Ak[i][i + 1];
+      const c = Ak[i + 1][i];
+      const d = Ak[i + 1][i + 1];
+
+      const trace = a + d;
+      const det = a * d - b * c;
+      const disc = trace * trace - 4 * det;
+
+      if (disc >= 0) {
+        eigenvalues.push({ re: (trace + Math.sqrt(disc)) / 2, im: 0 });
+        eigenvalues.push({ re: (trace - Math.sqrt(disc)) / 2, im: 0 });
+      } else {
+        eigenvalues.push({ re: trace / 2, im: Math.sqrt(-disc) / 2 });
+        eigenvalues.push({ re: trace / 2, im: -Math.sqrt(-disc) / 2 });
+      }
+      i += 2;
+    } else {
+      // 1x1 real block
+      eigenvalues.push({ re: Ak[i][i], im: 0 });
+      i += 1;
+    }
   }
 
   return eigenvalues;
@@ -1237,12 +1265,12 @@ export class MatrixAnalysis {
    */
   get isInternallyStable(): boolean {
     /**
-     * In majority of cases, 50 is sufficient for convergence of the QR algorithm to approximate eigenvalues
+     * In majority of cases, 1000 is sufficient for convergence of the QR algorithm to approximate eigenvalues
      * since the matrices are small most of the time.
      * */
-    const eigenvalues = getEigenvalues(this.A, 50, EPSILON);
+    const eigenvalues = getEigenvalues(this.A, 1000, EPSILON);
 
-    // System is internally stable if ALL eigenvalues satisfy Re(λ) < 0 (for continuous-time systems)
-    return eigenvalues.every((lambda) => lambda < EPSILON);
+    // Asymptotically internally stable iff ALL eigenvalues satisfy Re(λ) < 0
+    return eigenvalues.every((lambda) => lambda.re < -EPSILON);
   }
 }
