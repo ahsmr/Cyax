@@ -1163,6 +1163,66 @@ export function Hessenberg_householder(A: number[][]): {
   return { H, Q };
 }
 
+/**
+ * Computes the QR factorization H = Q * R of an upper Hessenberg matrix H (n x n)
+ * in O(n^2) operations using Givens rotations (Algoritme 3 specialized to i = j + 1).
+ *
+ * @param H | Upper Hessenberg square matrix (n x n).
+ * @returns | Object containing orthogonal matrix Q and upper-triangular matrix R.
+ */
+export function hessenberg_givensRotatie_qr(H: number[][]): {
+  Q: number[][];
+  R: number[][];
+} {
+  const n = H.length;
+  if (n === 0) return { Q: [], R: [] };
+
+  // Line 1: Q = I, R = H (deep clone so H is not mutated)
+  const Q: number[][] = Array.from({ length: n }, (_, r) =>
+    Array.from({ length: n }, (_, c) => (r === c ? 1 : 0)),
+  );
+  const R: number[][] = H.map((row) => [...row]);
+
+  // Line 2: for j = 1 to n - 1 do (0-indexed: j = 0 to n - 2)
+  // Line 3: On an upper Hessenberg matrix, only row i = j + 1 is non-zero below the diagonal
+  for (let j = 0; j < n - 1; j++) {
+    const i = j + 1;
+    const r_prev = R[i - 1][j]; // r_{i-1, j} = R[j][j]
+    const r_curr = R[i][j];     // r_{i, j}   = R[j + 1][j]
+
+    if (Math.abs(r_curr) === 0) continue;
+
+    // Line 4: c = r_{i-1, j} / sqrt(|r_{i-1, j}|^2 + |r_{i, j}|^2),
+    //         s = r_{i, j}   / sqrt(|r_{i-1, j}|^2 + |r_{i, j}|^2)
+    const denom = Math.hypot(r_prev, r_curr);
+    const c = r_prev / denom;
+    const s = r_curr / denom;
+
+    // Line 5: r_{i, j} = 0, r_{i-1, j} = sqrt(|r_{i-1, j}|^2 + |r_{i, j}|^2)
+    R[i - 1][j] = denom;
+    R[i][j] = 0;
+
+    // Line 6: for k = j + 1 to n do (0-indexed: k = j + 1 to n - 1)
+    for (let k = j + 1; k < n; k++) {
+      // Line 7: [r_{i-1, k}; r_{i, k}] = [[c, s]; [-s, c]] * [r_{i-1, k}; r_{i, k}]
+      const top = R[i - 1][k];
+      const bot = R[i][k];
+      R[i - 1][k] = c * top + s * bot;
+      R[i][k] = -s * top + c * bot;
+    } // Line 8: end for
+
+    // Line 9: for k = 1 to m do (0-indexed: k = 0 to n - 1)
+    for (let k = 0; k < n; k++) {
+      // Line 10: [q_{k, i-1}, q_{k, i}] = [q_{k, i-1}, q_{k, i}] * [[c, -s]; [s, c]]
+      const left = Q[k][i - 1];
+      const right = Q[k][i];
+      Q[k][i - 1] = c * left + s * right;
+      Q[k][i] = -s * left + c * right;
+    } // Line 11: end for
+  } // Line 12-13: end for
+
+  return { Q, R };
+}
 
 /**
  *  Computes the eigenvalues of a square matrix A using the QR algorithm (householder).
