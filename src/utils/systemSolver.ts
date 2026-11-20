@@ -1055,7 +1055,6 @@ export function householderQR(A: number[][]): { Q: number[][]; R: number[][] } {
   return { Q, R };
 }
 
-
 /**
  * Reduces a real square matrix A (m x m) to an orthogonally similar upper Hessenberg matrix H
  * using Householder similarity transformations: H = Q^T * A * Q.
@@ -1170,7 +1169,7 @@ export function Hessenberg_householder(A: number[][]): {
  * @param H | Upper Hessenberg square matrix (n x n).
  * @returns | Object containing orthogonal matrix Q and upper-triangular matrix R.
  */
-export function hessenberg_givensRotatie_qr(H: number[][]): {
+export function hessenberg_givensRotation_qr(H: number[][]): {
   Q: number[][];
   R: number[][];
 } {
@@ -1188,7 +1187,7 @@ export function hessenberg_givensRotatie_qr(H: number[][]): {
   for (let j = 0; j < n - 1; j++) {
     const i = j + 1;
     const r_prev = R[i - 1][j]; // r_{i-1, j} = R[j][j]
-    const r_curr = R[i][j];     // r_{i, j}   = R[j + 1][j]
+    const r_curr = R[i][j]; // r_{i, j}   = R[j + 1][j]
 
     if (Math.abs(r_curr) === 0) continue;
 
@@ -1238,19 +1237,31 @@ function getEigenvalues(
 ): Complex[] {
   const n = A.length;
   if (n === 0) return [];
-  let Ak = A.map((row) => [...row]);
+
+  // Use Hessenberg reduction + O(n^2) Givens QR for n >= 8,
+  // and direct dense Householder QR for smaller matrices.
+  const useHessenberg = n >= 8;
+  let Ak: number[][] = useHessenberg
+    ? Hessenberg_householder(A).H
+    : A.map((row) => [...row]);
 
   for (let iter = 0; iter < maxIterations; iter++) {
-    const { Q, R } = householderQR(Ak);
+    const { Q, R } = useHessenberg
+      ? hessenberg_givensRotation_qr(Ak)
+      : householderQR(Ak);
 
     // Recombine: A_{k+1} = R * Q
     const A_next: number[][] = Array.from({ length: n }, () =>
       new Array(n).fill(0),
     );
     for (let i = 0; i < n; i++) {
-      for (let j = 0; j < n; j++) {
+      // For Hessenberg, A_next[i][j] = 0 when i > j + 1
+      const jStart = useHessenberg ? Math.max(0, i - 1) : 0;
+      for (let j = jStart; j < n; j++) {
         let sum = 0;
-        for (let k = 0; k < n; k++) {
+        // R[i][k] = 0 for k < i; when Hessenberg, Q[k][j] = 0 for k > j + 1
+        const kEnd = useHessenberg ? Math.min(n - 1, j + 1) : n - 1;
+        for (let k = i; k <= kEnd; k++) {
           sum += R[i][k] * Q[k][j];
         }
         A_next[i][j] = sum;
