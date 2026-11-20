@@ -1084,13 +1084,12 @@ export function Hessenberg_householder(A: number[][]): {
 
     const normX = Math.hypot(...x);
     if (normX === 0) {
-      const vZero = new Array(m - j - 1).fill(0);
-      vZero[0] = 1;
-      vStore.push(vZero);
+      // Push an all-zero vector so Q applies the identity transformation (no sign flip)
+      vStore.push(new Array(m - j - 1).fill(0));
       continue;
     }
 
-    // Line 4: v_j = x + sign(x_1) * ||x||_2 * e_1
+    // Line 4: v_j = x + sign(x_1) * ||x||_2 * e_1 (with sign(0) = 1)
     const signX1 = x[0] >= 0 ? 1 : -1;
     const v_j = [...x];
     v_j[0] += signX1 * normX;
