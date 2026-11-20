@@ -1055,6 +1055,116 @@ export function householderQR(A: number[][]): { Q: number[][]; R: number[][] } {
   return { Q, R };
 }
 
+
+/**
+ * Reduces a real square matrix A (m x m) to an orthogonally similar upper Hessenberg matrix H
+ * using Householder similarity transformations: H = Q^T * A * Q.
+ *
+ * @param A | Input square matrix (m x m).
+ * @returns | Object containing upper Hessenberg matrix H and orthogonal transformation matrix Q.
+ */
+export function Hessenberg_householder(A: number[][]): {
+  H: number[][];
+  Q: number[][];
+} {
+  const m = A.length;
+  if (m === 0) return { H: [], Q: [] };
+
+  // Line 1: H = A (deep clone so A is not mutated)
+  const H: number[][] = A.map((row) => [...row]);
+  const vStore: number[][] = [];
+
+  // Line 2: for j = 1 to m - 2 do (0-indexed: j = 0 to m - 3)
+  for (let j = 0; j < m - 2; j++) {
+    // Line 3: x = H_{j+1:m, j} (0-indexed: rows j + 1 to m - 1, col j)
+    const x: number[] = [];
+    for (let r = j + 1; r < m; r++) {
+      x.push(H[r][j]);
+    }
+
+    const normX = Math.hypot(...x);
+    if (normX === 0) {
+      const vZero = new Array(m - j - 1).fill(0);
+      vZero[0] = 1;
+      vStore.push(vZero);
+      continue;
+    }
+
+    // Line 4: v_j = x + sign(x_1) * ||x||_2 * e_1
+    const signX1 = x[0] >= 0 ? 1 : -1;
+    const v_j = [...x];
+    v_j[0] += signX1 * normX;
+
+    // Line 5: v_j = v_j / ||v_j||_2
+    const normV = Math.hypot(...v_j);
+    for (let i = 0; i < v_j.length; i++) {
+      v_j[i] /= normV;
+    }
+    vStore.push(v_j);
+
+    // Line 6: H_{j+1, j} = -sign(x_1) * ||x||_2, H_{j+2:m, j} = 0
+    H[j + 1][j] = -signX1 * normX;
+    for (let r = j + 2; r < m; r++) {
+      H[r][j] = 0;
+    }
+
+    // Line 7: for k = j + 1 to m do (0-indexed: k = j + 1 to m - 1)
+    for (let k = j + 1; k < m; k++) {
+      // Line 8: H_{j+1:m, k} = H_{j+1:m, k} - 2 * (v_j^* * H_{j+1:m, k}) * v_j
+      let dot = 0;
+      for (let r = 0; r < v_j.length; r++) {
+        dot += v_j[r] * H[j + 1 + r][k];
+      }
+      for (let r = 0; r < v_j.length; r++) {
+        H[j + 1 + r][k] -= 2 * dot * v_j[r];
+      }
+    } // Line 9: end for
+
+    // Line 10: for k = 1 to m do (0-indexed: k = 0 to m - 1)
+    for (let k = 0; k < m; k++) {
+      // Line 11: H_{k, j+1:m} = H_{k, j+1:m} - 2 * (H_{k, j+1:m} * v_j) * v_j^*
+      let dot = 0;
+      for (let c = 0; c < v_j.length; c++) {
+        dot += H[k][j + 1 + c] * v_j[c];
+      }
+      for (let c = 0; c < v_j.length; c++) {
+        H[k][j + 1 + c] -= 2 * dot * v_j[c];
+      }
+    } // Line 12: end for
+  } // Line 13: end for
+
+  // Construct orthogonal Q matrix (m x m)
+  const Q: number[][] = Array.from({ length: m }, () => new Array(m).fill(0));
+
+  // Line 14: for i = 1 to m do (0-indexed: i = 0 to m - 1)
+  for (let i = 0; i < m; i++) {
+    // Line 15: w = e_i
+    const w: number[] = new Array(m).fill(0);
+    w[i] = 1;
+
+    // Line 16: for k = m - 2 downto 1 do (0-indexed: k = m - 3 downto 0)
+    for (let k = m - 3; k >= 0; k--) {
+      const vk = vStore[k];
+      // Line 17: w_{k+1:m} = w_{k+1:m} - 2 * (v_k^* * w_{k+1:m}) * v_k
+      let dot = 0;
+      for (let r = 0; r < vk.length; r++) {
+        dot += vk[r] * w[k + 1 + r];
+      }
+      for (let r = 0; r < vk.length; r++) {
+        w[k + 1 + r] -= 2 * dot * vk[r];
+      }
+    } // Line 18: end for
+
+    // Line 19: Q_{1:m, i} = w
+    for (let r = 0; r < m; r++) {
+      Q[r][i] = w[r];
+    }
+  } // Line 20: end for
+
+  return { H, Q };
+}
+
+
 /**
  *  Computes the eigenvalues of a square matrix A using the QR algorithm (householder).
  * @param A             | The input square matrix (n x n) for which to compute eigenvalues.
