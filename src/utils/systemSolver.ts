@@ -1062,16 +1062,12 @@ export function householderQR(A: number[][]): { Q: number[][]; R: number[][] } {
  * @param A | Input square matrix (m x m).
  * @returns | Object containing upper Hessenberg matrix H and orthogonal transformation matrix Q.
  */
-export function Hessenberg_householder(A: number[][]): {
-  H: number[][];
-  Q: number[][];
-} {
+export function Hessenberg_householder(A: number[][]): number[][] {
   const m = A.length;
-  if (m === 0) return { H: [], Q: [] };
+  if (m === 0) return [];
 
   // Line 1: H = A (deep clone so A is not mutated)
   const H: number[][] = A.map((row) => [...row]);
-  const vStore: number[][] = [];
 
   // Line 2: for j = 1 to m - 2 do (0-indexed: j = 0 to m - 3)
   for (let j = 0; j < m - 2; j++) {
@@ -1083,8 +1079,6 @@ export function Hessenberg_householder(A: number[][]): {
 
     const normX = Math.hypot(...x);
     if (normX === 0) {
-      // Push an all-zero vector so Q applies the identity transformation (no sign flip)
-      vStore.push(new Array(m - j - 1).fill(0));
       continue;
     }
 
@@ -1098,7 +1092,6 @@ export function Hessenberg_householder(A: number[][]): {
     for (let i = 0; i < v_j.length; i++) {
       v_j[i] /= normV;
     }
-    vStore.push(v_j);
 
     // Line 6: H_{j+1, j} = -sign(x_1) * ||x||_2, H_{j+2:m, j} = 0
     H[j + 1][j] = -signX1 * normX;
@@ -1131,35 +1124,7 @@ export function Hessenberg_householder(A: number[][]): {
     } // Line 12: end for
   } // Line 13: end for
 
-  // Construct orthogonal Q matrix (m x m)
-  const Q: number[][] = Array.from({ length: m }, () => new Array(m).fill(0));
-
-  // Line 14: for i = 1 to m do (0-indexed: i = 0 to m - 1)
-  for (let i = 0; i < m; i++) {
-    // Line 15: w = e_i
-    const w: number[] = new Array(m).fill(0);
-    w[i] = 1;
-
-    // Line 16: for k = m - 2 downto 1 do (0-indexed: k = m - 3 downto 0)
-    for (let k = m - 3; k >= 0; k--) {
-      const vk = vStore[k];
-      // Line 17: w_{k+1:m} = w_{k+1:m} - 2 * (v_k^* * w_{k+1:m}) * v_k
-      let dot = 0;
-      for (let r = 0; r < vk.length; r++) {
-        dot += vk[r] * w[k + 1 + r];
-      }
-      for (let r = 0; r < vk.length; r++) {
-        w[k + 1 + r] -= 2 * dot * vk[r];
-      }
-    } // Line 18: end for
-
-    // Line 19: Q_{1:m, i} = w
-    for (let r = 0; r < m; r++) {
-      Q[r][i] = w[r];
-    }
-  } // Line 20: end for
-
-  return { H, Q };
+  return H;
 }
 
 /**
@@ -1242,7 +1207,7 @@ function getEigenvalues(
   // and direct dense Householder QR for smaller matrices.
   const useHessenberg = n >= 8;
   let Ak: number[][] = useHessenberg
-    ? Hessenberg_householder(A).H
+    ? Hessenberg_householder(A)
     : A.map((row) => [...row]);
 
   for (let iter = 0; iter < maxIterations; iter++) {
@@ -1447,8 +1412,6 @@ export class MatrixAnalysis {
     const eigenvalues = getEigenvalues(this.A, 1000, EPSILON);
 
     // Asymptotically internally stable iff ALL eigenvalues satisfy Re(λ) < 0
-    console.log(eigenvalues);
-    console.log(this.A);
     return eigenvalues.every((lambda) => lambda.re < -EPSILON);
   }
 }
