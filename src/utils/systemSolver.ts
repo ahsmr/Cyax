@@ -1269,18 +1269,27 @@ function getEigenvalues(
     }
 
     // Check convergence to quasi-upper-triangular (Real Schur) form:
-    // Every subdiagonal entry Ak[i][i-1] must either be ~0 (1x1 real block)
-    // OR be followed by a ~0 subdiagonal entry Ak[i+1][i] (2x2 complex block).
     let converged = true;
-    let i = n - 1;
-    while (i > 0) {
-      if (Math.abs(A_next[i][i - 1]) < tolerance) {
-        i -= 1; // 1x1 block converged
-      } else if (i > 1 && Math.abs(A_next[i - 1][i - 2]) < tolerance) {
-        i -= 2; // 2x2 block isolated
-      } else {
-        converged = false;
-        break;
+    for (let c = 0; c < n - 1 && converged; c++) {
+      // 1. Everything strictly below the first subdiagonal (r > c + 1) MUST be ~0
+      for (let r = c + 2; r < n; r++) {
+        if (Math.abs(A_next[r][c]) >= tolerance) {
+          converged = false;
+          break;
+        }
+      }
+      if (!converged) break;
+
+      // 2. If subdiagonal A_next[c+1][c] is non-zero (a 2x2 block at c, c+1),
+      //    then neither the subdiagonal above it (c, c-1) nor below it (c+2, c+1) can be non-zero
+      if (Math.abs(A_next[c + 1][c]) >= tolerance) {
+        if (
+          (c > 0 && Math.abs(A_next[c][c - 1]) >= tolerance) ||
+          (c + 2 < n && Math.abs(A_next[c + 2][c + 1]) >= tolerance)
+        ) {
+          converged = false;
+          break;
+        }
       }
     }
 
@@ -1438,6 +1447,8 @@ export class MatrixAnalysis {
     const eigenvalues = getEigenvalues(this.A, 1000, EPSILON);
 
     // Asymptotically internally stable iff ALL eigenvalues satisfy Re(λ) < 0
+    console.log(eigenvalues);
+    console.log(this.A);
     return eigenvalues.every((lambda) => lambda.re < -EPSILON);
   }
 }
