@@ -56,8 +56,8 @@ function buildTestMatrices(n: number): { label: string; A: number[][] }[] {
   ];
 }
 
-// Sweep n = 3..20 across 3 matrix topologies
-const CASES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 50].flatMap((n) =>
+// Sweep n = 1..50 across 3 matrix topologies
+const CASES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12,13,14, 15, 20, 50].flatMap((n) =>
   buildTestMatrices(n).map(({ label, A }) => ({ n, label, A })),
 );
 
