@@ -1203,9 +1203,9 @@ function getEigenvalues(
   const n = A.length;
   if (n === 0) return [];
 
-  // Use Hessenberg reduction + O(n^2) Givens QR for n >= 8,
+  // Use Hessenberg reduction + O(n^2) Givens QR for n >= 15 as it was tested in the benchmark,
   // and direct dense Householder QR for smaller matrices.
-  const useHessenberg = n >= 8;
+  const useHessenberg = n >= 15;
   let Ak: number[][] = useHessenberg
     ? Hessenberg_householder(A)
     : A.map((row) => [...row]);
