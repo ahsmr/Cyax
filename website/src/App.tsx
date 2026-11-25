@@ -24,7 +24,7 @@ import "../../src/App.css";
 import rootPkg from "../../package.json";
 
 // Update these constants with your release link and personal contact details
-const WINDOWS_EXE_URL = `https://github.com/ahsmr/Cyax/releases/latest/download/Cyax-Setup-${rootPkg.version}.exe`;
+const WINDOWS_EXE_URL = `https://github.com/ahsmr/Cyax/releases/latest/download/Cyax.Setup.${rootPkg.version}.exe`;
 const GITHUB_REPO_URL = "https://github.com/ahsmr/Cyax";
 const GITHUB_PROFILE_URL = "https://github.com/ahsmr";
 const CONTACT_EMAIL = "ahsmr.dev@gmail.com";
