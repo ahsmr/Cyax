@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { TopBar } from "./components/TopBar";
-import { Sidebar } from "./components/Sidebar";
+// import { Sidebar } from "./components/Sidebar";
 import { HomeContent } from "./components/HomeContent";
 import type { Tab } from "./types";
 import SystemAnalysis from "./components/SystemAnalysis";
@@ -10,7 +10,7 @@ import {
 } from "./components/StandaloneTransferModule";
 
 /**
- * * ViewType
+ * ViewType
  * Defines the allowed view components mounted inside a tab workspace.
  * - 'home': Default workspace dashboard / sandbox launchpad.
  * - 'analysis': Systems theory state space / control analysis tool.
@@ -136,7 +136,7 @@ export default function App() {
 
       {/* Workspace Panel */}
       <div className="workspace-container">
-        <Sidebar />
+        {/* <Sidebar /> */}
 
         {/* Home Sandbox Container */}
         <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
