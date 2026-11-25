@@ -1,7 +1,8 @@
 {
   "name": "cyax",
+  "description": "Continuous-Time Control Systems Simulator and Symbolic Transfer Function Engine",
   "private": true,
-  "version": "0.7.0",
+  "version": "1.0.0",
   "engineVersion": "1.8.0",
   "type": "module",
   "main": "electron/main.js",
@@ -22,6 +23,7 @@
   },
   "build": {
     "appId": "com.ahsmr.cyax",
+    "icon": "public/icon.ico",
     "productName": "Cyax",
     "files": [
       "dist/**/*",
