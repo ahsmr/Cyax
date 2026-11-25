@@ -288,7 +288,7 @@ export function App() {
       </section>
 
       {/* ==========================================
-4. QUICK START GUIDE
+          4. QUICK START GUIDE
          ========================================== */}
       <section id="quickstart" className="section">
         <div className="container">
@@ -304,7 +304,9 @@ export function App() {
               <p>
                 Click <strong>Launch Online Simulator</strong> above to run Cyax
                 directly in your browser, or download{" "}
-                <code>Cyax-Setup-0.6.0.exe</code> for offline Windows use.
+                <code>Cyax.Setup.{rootPkg.version}.exe</code> for offline Windows
+                use (if Windows SmartScreen prompts you, click{" "}
+                <strong>More info → Run anyway</strong>).
               </p>
             </div>
 
