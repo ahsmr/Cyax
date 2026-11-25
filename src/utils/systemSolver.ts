@@ -251,6 +251,11 @@ function simplifyRational(num: Poly, den: Poly): Rational {
   return { num: cleanPoly(n), den: cleanPoly(d) };
 }
 
+/**
+ * Calculating all the roots of a polynomial  
+ * @param poly | The given polynomial
+ * @returns    | A complex[] containing all the roots of the given polynomial
+ */
 function solveAllRoots(poly: Poly): Complex[] {
   const cleanP = cleanPoly(poly);
   const n = cleanP.length - 1;
@@ -348,12 +353,12 @@ function solveAllRoots(poly: Poly): Complex[] {
  * factorPolynomial([7, 10, 4, 1]);
  * // => [[1, 1], [7, 3, 1]]  representing (s + 1)(s^2 + 3s + 7)
  */
-export function factorPolynomial(poly: Poly): Poly[] {
+export function factorPolynomial(poly: Poly): { factors: Poly[]; roots: Complex[] } {
   const cleanP = cleanPoly(poly);
   const n = cleanP.length - 1;
 
   if (n <= 0) {
-    return [cleanP];
+    return { factors: [cleanP], roots: [] };
   }
 
   const leadingCoeff = cleanP[n];
@@ -407,7 +412,7 @@ export function factorPolynomial(poly: Poly): Poly[] {
     }
   }
 
-  return result;
+  return { factors: result, roots };
 }
 
 // ==========================================
@@ -822,20 +827,24 @@ export function deriveTransferFunction(
         .join("");
     };
 
-    const factoredNumStr = formatFactorList(numFactors);
-    const factoredDenStr = formatFactorList(denFactors);
+    const factoredNumStr = formatFactorList(numFactors.factors);
+    const factoredDenStr = formatFactorList(denFactors.factors);
+   const isCausal = numFactors.roots.length <= denFactors.roots.length;
+    const isBIBOStable = denFactors.roots.every((root) => root.re < -EPSILON); // for the Bugs in the durand-kener methode 
     const factoredLaTeX =
       factoredDenStr === "1"
         ? factoredNumStr
         : `\\frac{${factoredNumStr}}{${factoredDenStr}}`;
 
-    stepByStep.push(
-      `\\text{Step 3: Unsimplified, Simplified, and Factored Transfer Function}\\\\[0.5em]` +
-        `\\text{Unsimplified: } \\frac{N(s)}{D(s)} = H(s) = ${unsimplifiedLaTeX}\\\\[1em]` +
-        `\\text{Simplified: } \\frac{N(s)}{D(s)} = H(s) = ${finalLaTeX}\\\\[1em]` +
-        `\\text{Factored: } \\frac{N(s)}{D(s)} = H(s) = ${factoredLaTeX}`,
-    );
-
+   stepByStep.push(
+  `\\text{Step 3: Unsimplified, Simplified, and Factored Transfer Function}\\\\[0.5em]` +
+    `\\text{Unsimplified: } \\frac{N(s)}{D(s)} = H(s) = ${unsimplifiedLaTeX}\\\\[1em]` +
+    `\\text{Factored: } \\frac{N(s)}{D(s)} = H(s) = ${factoredLaTeX}\\\\[1.5em]` +
+    `\\begin{aligned}` +
+    `& \\implies \\quad \\text{Causality:} && ${isCausal ? check : cross} \\quad \\text{(${isCausal ? "Causal" : "Non-Causal"})} \\\\[6pt]` +
+    `& \\implies \\quad \\text{BIBO Stability:} && ${isBIBOStable ? check : cross} \\quad \\text{(${isBIBOStable ? "BIBO Stable" : "Not BIBO Stable"})}` +
+    `\\end{aligned}`,
+);
     // Step 4: Convert Transfer Function to Differential Equation
     // Helper to format polynomial coefficients into differential terms (e.g., d^k y / dt^k)
     const polyToDiffOp = (poly: Poly, varName: string): string => {
