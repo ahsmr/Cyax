@@ -22,9 +22,21 @@ body {
   padding-top: 16px;
   background-color: var(--bg-dark);
   background-image:
-    radial-gradient(ellipse 80% 45% at 50% 0%, rgba(56, 189, 248, 0.16), transparent 65%),
-    radial-gradient(ellipse 65% 40% at 85% 42%, rgba(14, 165, 233, 0.09), transparent 70%),
-    radial-gradient(ellipse 65% 45% at 15% 75%, rgba(30, 58, 138, 0.14), transparent 70%),
+    radial-gradient(
+      ellipse 80% 45% at 50% 0%,
+      rgba(56, 189, 248, 0.16),
+      transparent 65%
+    ),
+    radial-gradient(
+      ellipse 65% 40% at 85% 42%,
+      rgba(14, 165, 233, 0.09),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 65% 45% at 15% 75%,
+      rgba(30, 58, 138, 0.14),
+      transparent 70%
+    ),
     linear-gradient(180deg, #020617 0%, #050d21 48%, #03091a 100%);
   color: var(--text-main);
   font-family:
@@ -114,7 +126,9 @@ body {
 .cyax-landing .nav-links a {
   padding: 6px 14px;
   border-radius: 9999px;
-  transition: color 0.15s ease, background-color 0.15s ease;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .cyax-landing .nav-links a:hover {
@@ -217,7 +231,9 @@ body {
   padding: 12px 22px;
   border-radius: 10px;
   box-shadow: 0 4px 18px rgba(56, 189, 248, 0.25);
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
 }
 
 .cyax-landing .btn-primary:hover {
@@ -235,7 +251,9 @@ body {
   font-weight: 600;
   padding: 12px 20px;
   border-radius: 10px;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
 .cyax-landing .btn-secondary:hover {
@@ -332,7 +350,11 @@ body {
   padding: 44px 0;
   border-top: 1px solid rgba(56, 189, 248, 0.22);
   background:
-    radial-gradient(ellipse 70% 100% at 50% 0%, rgba(56, 189, 248, 0.08), transparent 75%),
+    radial-gradient(
+      ellipse 70% 100% at 50% 0%,
+      rgba(56, 189, 248, 0.08),
+      transparent 75%
+    ),
     linear-gradient(180deg, #071024 0%, #030712 100%);
   text-align: center;
   color: var(--text-muted);
