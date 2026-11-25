@@ -8,8 +8,8 @@ on:
 
 
 jobs:
-  test-and-benchmark:
-    name: Run Tests & Benchmarks
+  test:
+    name: Run Tests
     runs-on: ubuntu-latest
 
     steps:

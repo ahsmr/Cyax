@@ -251,6 +251,11 @@ function simplifyRational(num: Poly, den: Poly): Rational {
   return { num: cleanPoly(n), den: cleanPoly(d) };
 }
 
+/**
+ * Calculating all the roots of a polynomial  
+ * @param poly | The given polynomial
+ * @returns    | A complex[] containing all the roots of the given polynomial
+ */
 function solveAllRoots(poly: Poly): Complex[] {
   const cleanP = cleanPoly(poly);
   const n = cleanP.length - 1;
@@ -348,12 +353,15 @@ function solveAllRoots(poly: Poly): Complex[] {
  * factorPolynomial([7, 10, 4, 1]);
  * // => [[1, 1], [7, 3, 1]]  representing (s + 1)(s^2 + 3s + 7)
  */
-export function factorPolynomial(poly: Poly): Poly[] {
+export function factorPolynomial(poly: Poly): {
+  factors: Poly[];
+  roots: Complex[];
+} {
   const cleanP = cleanPoly(poly);
   const n = cleanP.length - 1;
 
   if (n <= 0) {
-    return [cleanP];
+    return { factors: [cleanP], roots: [] };
   }
 
   const leadingCoeff = cleanP[n];
@@ -407,7 +415,7 @@ export function factorPolynomial(poly: Poly): Poly[] {
     }
   }
 
-  return result;
+  return { factors: result, roots };
 }
 
 // ==========================================
@@ -822,8 +830,10 @@ export function deriveTransferFunction(
         .join("");
     };
 
-    const factoredNumStr = formatFactorList(numFactors);
-    const factoredDenStr = formatFactorList(denFactors);
+    const factoredNumStr = formatFactorList(numFactors.factors);
+    const factoredDenStr = formatFactorList(denFactors.factors);
+    const isCausal = numFactors.roots.length <= denFactors.roots.length;
+    const isBIBOStable = denFactors.roots.every((root) => root.re < -EPSILON); // for the Bugs in the durand-kener methode
     const factoredLaTeX =
       factoredDenStr === "1"
         ? factoredNumStr
@@ -832,10 +842,12 @@ export function deriveTransferFunction(
     stepByStep.push(
       `\\text{Step 3: Unsimplified, Simplified, and Factored Transfer Function}\\\\[0.5em]` +
         `\\text{Unsimplified: } \\frac{N(s)}{D(s)} = H(s) = ${unsimplifiedLaTeX}\\\\[1em]` +
-        `\\text{Simplified: } \\frac{N(s)}{D(s)} = H(s) = ${finalLaTeX}\\\\[1em]` +
-        `\\text{Factored: } \\frac{N(s)}{D(s)} = H(s) = ${factoredLaTeX}`,
+        `\\text{Factored: } \\frac{N(s)}{D(s)} = H(s) = ${factoredLaTeX}\\\\[1.5em]` +
+        `\\begin{aligned}` +
+        `& \\implies \\quad \\text{Causality:} && ${isCausal ? check : cross} \\quad \\text{(${isCausal ? "Causal" : "Non-Causal"})} \\\\[6pt]` +
+        `& \\implies \\quad \\text{BIBO Stability:} && ${isBIBOStable ? check : cross} \\quad \\text{(${isBIBOStable ? "BIBO Stable" : "Not BIBO Stable"})}` +
+        `\\end{aligned}`,
     );
-
     // Step 4: Convert Transfer Function to Differential Equation
     // Helper to format polynomial coefficients into differential terms (e.g., d^k y / dt^k)
     const polyToDiffOp = (poly: Poly, varName: string): string => {
@@ -1056,6 +1068,139 @@ export function householderQR(A: number[][]): { Q: number[][]; R: number[][] } {
 }
 
 /**
+ * Reduces a real square matrix A (m x m) to an orthogonally similar upper Hessenberg matrix H
+ * using Householder similarity transformations: H = Q^T * A * Q.
+ *
+ * @param A | Input square matrix (m x m).
+ * @returns | Object containing upper Hessenberg matrix H and orthogonal transformation matrix Q.
+ */
+export function Hessenberg_householder(A: number[][]): number[][] {
+  const m = A.length;
+  if (m === 0) return [];
+
+  // Line 1: H = A (deep clone so A is not mutated)
+  const H: number[][] = A.map((row) => [...row]);
+
+  // Line 2: for j = 1 to m - 2 do (0-indexed: j = 0 to m - 3)
+  for (let j = 0; j < m - 2; j++) {
+    // Line 3: x = H_{j+1:m, j} (0-indexed: rows j + 1 to m - 1, col j)
+    const x: number[] = [];
+    for (let r = j + 1; r < m; r++) {
+      x.push(H[r][j]);
+    }
+
+    const normX = Math.hypot(...x);
+    if (normX === 0) {
+      continue;
+    }
+
+    // Line 4: v_j = x + sign(x_1) * ||x||_2 * e_1 (with sign(0) = 1)
+    const signX1 = x[0] >= 0 ? 1 : -1;
+    const v_j = [...x];
+    v_j[0] += signX1 * normX;
+
+    // Line 5: v_j = v_j / ||v_j||_2
+    const normV = Math.hypot(...v_j);
+    for (let i = 0; i < v_j.length; i++) {
+      v_j[i] /= normV;
+    }
+
+    // Line 6: H_{j+1, j} = -sign(x_1) * ||x||_2, H_{j+2:m, j} = 0
+    H[j + 1][j] = -signX1 * normX;
+    for (let r = j + 2; r < m; r++) {
+      H[r][j] = 0;
+    }
+
+    // Line 7: for k = j + 1 to m do (0-indexed: k = j + 1 to m - 1)
+    for (let k = j + 1; k < m; k++) {
+      // Line 8: H_{j+1:m, k} = H_{j+1:m, k} - 2 * (v_j^* * H_{j+1:m, k}) * v_j
+      let dot = 0;
+      for (let r = 0; r < v_j.length; r++) {
+        dot += v_j[r] * H[j + 1 + r][k];
+      }
+      for (let r = 0; r < v_j.length; r++) {
+        H[j + 1 + r][k] -= 2 * dot * v_j[r];
+      }
+    } // Line 9: end for
+
+    // Line 10: for k = 1 to m do (0-indexed: k = 0 to m - 1)
+    for (let k = 0; k < m; k++) {
+      // Line 11: H_{k, j+1:m} = H_{k, j+1:m} - 2 * (H_{k, j+1:m} * v_j) * v_j^*
+      let dot = 0;
+      for (let c = 0; c < v_j.length; c++) {
+        dot += H[k][j + 1 + c] * v_j[c];
+      }
+      for (let c = 0; c < v_j.length; c++) {
+        H[k][j + 1 + c] -= 2 * dot * v_j[c];
+      }
+    } // Line 12: end for
+  } // Line 13: end for
+
+  return H;
+}
+
+/**
+ * Computes the QR factorization H = Q * R of an upper Hessenberg matrix H (n x n)
+ * in O(n^2) operations using Givens rotations (Algoritme 3 specialized to i = j + 1).
+ *
+ * @param H | Upper Hessenberg square matrix (n x n).
+ * @returns | Object containing orthogonal matrix Q and upper-triangular matrix R.
+ */
+export function hessenberg_givensRotation_qr(H: number[][]): {
+  Q: number[][];
+  R: number[][];
+} {
+  const n = H.length;
+  if (n === 0) return { Q: [], R: [] };
+
+  // Line 1: Q = I, R = H (deep clone so H is not mutated)
+  const Q: number[][] = Array.from({ length: n }, (_, r) =>
+    Array.from({ length: n }, (_, c) => (r === c ? 1 : 0)),
+  );
+  const R: number[][] = H.map((row) => [...row]);
+
+  // Line 2: for j = 1 to n - 1 do (0-indexed: j = 0 to n - 2)
+  // Line 3: On an upper Hessenberg matrix, only row i = j + 1 is non-zero below the diagonal
+  for (let j = 0; j < n - 1; j++) {
+    const i = j + 1;
+    const r_prev = R[i - 1][j]; // r_{i-1, j} = R[j][j]
+    const r_curr = R[i][j]; // r_{i, j}   = R[j + 1][j]
+
+    if (Math.abs(r_curr) === 0) continue;
+
+    // Line 4: c = r_{i-1, j} / sqrt(|r_{i-1, j}|^2 + |r_{i, j}|^2),
+    //         s = r_{i, j}   / sqrt(|r_{i-1, j}|^2 + |r_{i, j}|^2)
+    const denom = Math.hypot(r_prev, r_curr);
+    const c = r_prev / denom;
+    const s = r_curr / denom;
+
+    // Line 5: r_{i, j} = 0, r_{i-1, j} = sqrt(|r_{i-1, j}|^2 + |r_{i, j}|^2)
+    R[i - 1][j] = denom;
+    R[i][j] = 0;
+
+    // Line 6: for k = j + 1 to n do (0-indexed: k = j + 1 to n - 1)
+    for (let k = j + 1; k < n; k++) {
+      // Line 7: [r_{i-1, k}; r_{i, k}] = [[c, s]; [-s, c]] * [r_{i-1, k}; r_{i, k}]
+      const top = R[i - 1][k];
+      const bot = R[i][k];
+      R[i - 1][k] = c * top + s * bot;
+      R[i][k] = -s * top + c * bot;
+    } // Line 8: end for
+
+    // Line 9: for k = 1 to m do (0-indexed: k = 0 to n - 1)
+    for (let k = 0; k < n; k++) {
+      // Line 10: [q_{k, i-1}, q_{k, i}] = [q_{k, i-1}, q_{k, i}] * [[c, -s]; [s, c]]
+      const left = Q[k][i - 1];
+      const right = Q[k][i];
+      Q[k][i - 1] = c * left + s * right;
+      Q[k][i] = -s * left + c * right;
+    } // Line 11: end for
+  } // Line 12-13: end for
+
+  return { Q, R };
+}
+
+/**
  *  Computes the eigenvalues of a square matrix A using the QR algorithm (householder).
  * @param A             | The input square matrix (n x n) for which to compute eigenvalues.
  * @param maxIterations | The maximum number of iterations to perform (default: 1000).
@@ -1069,19 +1214,31 @@ function getEigenvalues(
 ): Complex[] {
   const n = A.length;
   if (n === 0) return [];
-  let Ak = A.map((row) => [...row]);
+
+  // Use Hessenberg reduction + O(n^2) Givens QR for n >= 15 as it was tested in the benchmark,
+  // and direct dense Householder QR for smaller matrices.
+  const useHessenberg = n >= 15;
+  let Ak: number[][] = useHessenberg
+    ? Hessenberg_householder(A)
+    : A.map((row) => [...row]);
 
   for (let iter = 0; iter < maxIterations; iter++) {
-    const { Q, R } = householderQR(Ak);
+    const { Q, R } = useHessenberg
+      ? hessenberg_givensRotation_qr(Ak)
+      : householderQR(Ak);
 
     // Recombine: A_{k+1} = R * Q
     const A_next: number[][] = Array.from({ length: n }, () =>
       new Array(n).fill(0),
     );
     for (let i = 0; i < n; i++) {
-      for (let j = 0; j < n; j++) {
+      // For Hessenberg, A_next[i][j] = 0 when i > j + 1
+      const jStart = useHessenberg ? Math.max(0, i - 1) : 0;
+      for (let j = jStart; j < n; j++) {
         let sum = 0;
-        for (let k = 0; k < n; k++) {
+        // R[i][k] = 0 for k < i; when Hessenberg, Q[k][j] = 0 for k > j + 1
+        const kEnd = useHessenberg ? Math.min(n - 1, j + 1) : n - 1;
+        for (let k = i; k <= kEnd; k++) {
           sum += R[i][k] * Q[k][j];
         }
         A_next[i][j] = sum;
@@ -1089,18 +1246,27 @@ function getEigenvalues(
     }
 
     // Check convergence to quasi-upper-triangular (Real Schur) form:
-    // Every subdiagonal entry Ak[i][i-1] must either be ~0 (1x1 real block)
-    // OR be followed by a ~0 subdiagonal entry Ak[i+1][i] (2x2 complex block).
     let converged = true;
-    let i = n - 1;
-    while (i > 0) {
-      if (Math.abs(A_next[i][i - 1]) < tolerance) {
-        i -= 1; // 1x1 block converged
-      } else if (i > 1 && Math.abs(A_next[i - 1][i - 2]) < tolerance) {
-        i -= 2; // 2x2 block isolated
-      } else {
-        converged = false;
-        break;
+    for (let c = 0; c < n - 1 && converged; c++) {
+      // 1. Everything strictly below the first subdiagonal (r > c + 1) MUST be ~0
+      for (let r = c + 2; r < n; r++) {
+        if (Math.abs(A_next[r][c]) >= tolerance) {
+          converged = false;
+          break;
+        }
+      }
+      if (!converged) break;
+
+      // 2. If subdiagonal A_next[c+1][c] is non-zero (a 2x2 block at c, c+1),
+      //    then neither the subdiagonal above it (c, c-1) nor below it (c+2, c+1) can be non-zero
+      if (Math.abs(A_next[c + 1][c]) >= tolerance) {
+        if (
+          (c > 0 && Math.abs(A_next[c][c - 1]) >= tolerance) ||
+          (c + 2 < n && Math.abs(A_next[c + 2][c + 1]) >= tolerance)
+        ) {
+          converged = false;
+          break;
+        }
       }
     }
 
