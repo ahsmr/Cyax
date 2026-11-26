@@ -217,8 +217,12 @@ const SystemAnalysis: React.FC = () => {
         solverOutput.denominator,
       );
       setImpulseResult(res);
-    } catch {
-      setImpulseError("Failed to compute impulse response.");
+    } catch (err) {
+      setImpulseError(
+        err instanceof Error && err.message.includes("Improper")
+          ? "Transfer function is not causal (deg N > deg D), so the impulse response cannot be calculated."
+          : "Failed to compute impulse response.",
+      );
       setImpulseResult(null);
     }
   };
