@@ -838,13 +838,24 @@ export function deriveTransferFunction(
 
     const formatFactorList = (factors: Poly[]): string => {
       if (factors.length === 0) return "0";
-      return factors
-        .map((f) => {
-          const str = polyToLaTeX(f);
-          return f.length > 2 || (f.length === 2 && f[0] !== 0)
-            ? `(${str})`
-            : str;
-        })
+
+      const grouped: { base: string; count: number }[] = [];
+
+      for (const f of factors) {
+        const raw = polyToLaTeX(f);
+        const base =
+          f.length > 2 || (f.length === 2 && f[0] !== 0) ? `(${raw})` : raw;
+
+        const existing = grouped.find((g) => g.base === base);
+        if (existing) {
+          existing.count++;
+        } else {
+          grouped.push({ base, count: 1 });
+        }
+      }
+
+      return grouped
+        .map(({ base, count }) => (count > 1 ? `${base}^{${count}}` : base))
         .join("");
     };
 
