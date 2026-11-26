@@ -365,43 +365,58 @@ export function factorPolynomial(poly: Poly): {
   }
 
   const leadingCoeff = cleanP[n];
-  const roots = solveAllRoots(cleanP);
-  const used = new Array(roots.length).fill(false);
   const result: Poly[] = [];
+  const allRoots: Complex[] = [];
 
-  for (let i = 0; i < roots.length; i++) {
-    if (used[i]) continue;
+  // 1. Analytically deflate roots at s = 0 (s^k) before numerical root-finding
+  let zeroMult = 0;
+  while (zeroMult < n && Math.abs(cleanP[zeroMult]) < EPSILON) {
+    result.push([0, 1]);
+    allRoots.push({ re: 0, im: 0 });
+    zeroMult++;
+  }
 
-    if (Math.abs(roots[i].im) < EPSILON) {
-      // Real linear factor: (s - r) => [-r, 1]
-      const r = Number(roots[i].re.toFixed(4));
-      result.push(cleanPoly([-r, 1]));
-      used[i] = true;
-    } else {
-      // Complex conjugate pair: alpha +/- j*beta => s^2 - 2*alpha*s + (alpha^2 + beta^2)
-      let pairIdx = -1;
-      for (let j = i + 1; j < roots.length; j++) {
-        if (
-          !used[j] &&
-          Math.abs(roots[i].re - roots[j].re) < 1e-3 &&
-          Math.abs(roots[i].im + roots[j].im) < 1e-3
-        ) {
-          pairIdx = j;
-          break;
-        }
-      }
+  const deflatedP = cleanP.slice(zeroMult);
+  if (deflatedP.length - 1 > 0) {
+    const roots = solveAllRoots(deflatedP);
+    allRoots.push(...roots);
+    const used = new Array(roots.length).fill(false);
 
-      if (pairIdx !== -1) {
-        const alpha = roots[i].re;
-        const beta = Math.abs(roots[i].im);
+    for (let i = 0; i < roots.length; i++) {
+      if (used[i]) continue;
 
-        const a1 = Number((-2 * alpha).toFixed(4));
-        const a0 = Number((alpha * alpha + beta * beta).toFixed(4));
-
-        result.push(cleanPoly([a0, a1, 1]));
-
+      if (Math.abs(roots[i].im) < EPSILON) {
+        const r = Number(roots[i].re.toFixed(4));
+        result.push(cleanPoly([-r, 1]));
         used[i] = true;
-        used[pairIdx] = true;
+      } else {
+        let pairIdx = -1;
+        for (let j = i + 1; j < roots.length; j++) {
+          if (
+            !used[j] &&
+            Math.abs(roots[i].re - roots[j].re) < 1e-2 &&
+            Math.abs(roots[i].im + roots[j].im) < 1e-2
+          ) {
+            pairIdx = j;
+            break;
+          }
+        }
+
+        if (pairIdx !== -1) {
+          const alpha = roots[i].re;
+          const beta = Math.abs(roots[i].im);
+          const a1 = Number((-2 * alpha).toFixed(4));
+          const a0 = Number((alpha * alpha + beta * beta).toFixed(4));
+
+          result.push(cleanPoly([a0, a1, 1]));
+          used[i] = true;
+          used[pairIdx] = true;
+        } else {
+          // Fallback: never silently drop an unpaired root
+          const r = Number(roots[i].re.toFixed(4));
+          result.push(cleanPoly([-r, 1]));
+          used[i] = true;
+        }
       }
     }
   }
@@ -415,7 +430,10 @@ export function factorPolynomial(poly: Poly): {
     }
   }
 
-  return { factors: result, roots };
+  return {
+    factors: result.length > 0 ? result : [cleanP],
+    roots: allRoots,
+  };
 }
 
 // ==========================================
